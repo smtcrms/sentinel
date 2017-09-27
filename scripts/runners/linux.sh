@@ -82,10 +82,10 @@ do_start() {
     fi
   else
     if [ ${#CONSOLE} -gt 0 ]; then
-      docker run --name "$CONTAINER_NAME-$NODE_NAME" -it \
+      docker run --name "$CONTAINER_NAME-$NODE_NAME" -it -v $HOME/.ethereum:/root/.ethereum \
         -e NODE_NAME=$NODE_NAME $BOOTNODE_URL $MINER $CONSOLE $V5 $ETHERBASE $BOOTNODE $PORTS $IMAGE_LABEL
     else
-      docker run --name "$CONTAINER_NAME-$NODE_NAME" -d \
+      docker run --name "$CONTAINER_NAME-$NODE_NAME" -d -v $HOME/.ethereum:/root/.ethereum \
         -e NODE_NAME=$NODE_NAME $BOOTNODE_URL $MINER $CONSOLE $V5 $ETHERBASE $BOOTNODE $PORTS $IMAGE_LABEL
     fi
   fi
