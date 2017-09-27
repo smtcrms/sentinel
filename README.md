@@ -32,7 +32,7 @@ For running a Sentinel node first you need to install all the dependencies
 
 ### Starting nodes
 
-`$ ~/sentinel.sh start --type {boot|normal|miner|main} --name NAME`
+`$ ~/sentinel.sh start --type {boot| normal| miner| main} --name NAME` (main is for connecting to Sentinel main network)
 
 Additional flags:
 
@@ -40,30 +40,34 @@ Additional flags:
 
 `-v5 -- For running in version 5 mode`
 
-`--bootnode-url -- Provide a boot node URL (If this flag is not privided, nodes will connect to the latest created boot node)`
+`--bootnode-url -- Provide a boot node URL (If this flag is not privided, nodes will connect to the latest created boot node. For Sentinel main network this flag is not required)`
 
 `--etherbase -- Provide Ethereum account address (default: 0x0000000000000000000000000000000000000001)`
 
 ### Stopping nodes
 
-Stop a node: `$ ~/sentinel.sh stop --type {boot|normal|miner|main} --name NAME`
+Stop a node: `$ ~/sentinel.sh stop --type {boot| normal| miner| main} --name NAME`
 
 Stop all nodes: `$ ~/sentinel.sh stop --all`
 
-Remove specific node: `$ ~/sentinel.sh stop --type {boot|normal|miner|main} --name NAME --purge`
+Delete specific node: `$ ~/sentinel.sh stop --type {boot| normal| miner| main} --name NAME --purge`
 
-Remove all nodes: `$ ~/sentinel.sh stop --purge-all`
+Delete all nodes: `$ ~/sentinel.sh stop --purge-all`
 
 ### Show Info of Nodes
 
-View IP address: `$ ~/sentinel.sh show --type {boot|normal|miner|main} --name NAME --ip`
+View IP address: `$ ~/sentinel.sh show --type {boot| normal| miner| main} --name NAME --ip`
 
-View node enode address: `$ ~/sentinel.sh show --type {boot|normal|miner|main} --name NAME --node-addr`
+View node enode address: `$ ~/sentinel.sh show --type {boot| normal| miner| main} --name NAME --node-addr`
 
-View peers of a node: `$ ~/sentinel.sh show --type {normal|miner|main} --name NAME --show-peers`
+View peers of a node: `$ ~/sentinel.sh show --type {normal| miner| main} --name NAME --show-peers`
 
 View all Sentinel containers: `$ ~/sentinel.sh show --all`
 
 ### Update Sentinel Docker image:
 
 `$ ~/sentinel.sh update`
+
+## Running Ethereum Wallet
+
+`$ ethereumwallet --rpc http://IP_ADDRESS:8545 --network sentinel`

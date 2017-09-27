@@ -1,4 +1,4 @@
- #!/bin/bash
+#!/bin/bash
 
 DOCKER=$(which 'docker')
 ETHEREUM_WALLET=$(which 'ethereumwallet')
