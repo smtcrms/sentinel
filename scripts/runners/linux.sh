@@ -17,7 +17,7 @@ do_update() {
 
 do_start() {
   if [ $# -le 0 ]; then echo "Need valid arguments"; exit 3; fi
-  BOOTNODE=; MINER=; ETHERBASE=; V5=; CONSOLE=; BOOTNODE_URL=; NODE_NAME=; CONTAINER_NAME=; PORTS=;
+  BOOTNODE=; MINER=; ETHERBASE=; V5=; CONSOLE=; BOOTNODE_URL=; NODE_NAME=; CONTAINER_NAME=; PORTS=; VOLUME=;
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --type)
@@ -32,6 +32,7 @@ do_start() {
         elif [ "$2" == "main" ]; then
           CONTAINER_NAME="sentinel_main"
           PORTS="-p 30303:30303 -p 30303:30303/udp -p 8545:8545"
+          VOLUME="-v $HOME/.sentinel:/root"
         fi
         shift
       ;;
@@ -82,10 +83,10 @@ do_start() {
     fi
   else
     if [ ${#CONSOLE} -gt 0 ]; then
-      docker run --name "$CONTAINER_NAME-$NODE_NAME" -it -v $HOME/.sentinel:/root \
+      docker run --name "$CONTAINER_NAME-$NODE_NAME" -it $VOLUME \
         -e NODE_NAME=$NODE_NAME $BOOTNODE_URL $MINER $CONSOLE $V5 $ETHERBASE $BOOTNODE $PORTS $IMAGE_LABEL
     else
-      docker run --name "$CONTAINER_NAME-$NODE_NAME" -d -v $HOME/.sentinel:/root \
+      docker run --name "$CONTAINER_NAME-$NODE_NAME" -d $VOLUME \
         -e NODE_NAME=$NODE_NAME $BOOTNODE_URL $MINER $CONSOLE $V5 $ETHERBASE $BOOTNODE $PORTS $IMAGE_LABEL
     fi
   fi
