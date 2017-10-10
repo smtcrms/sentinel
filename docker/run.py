@@ -5,6 +5,13 @@ if os.path.exists(os.path.join(os.environ['HOME'], '.ethereum')) == False:
   os.mkdir(os.path.join(os.environ['HOME'], '.ethereum'))
 if os.path.exists(os.path.join(os.environ['HOME'], '.ethereum/sentinel')) == False:
   os.mkdir(os.path.join(os.environ['HOME'], '.ethereum/sentinel'))
+  
+if os.path.exists(os.path.join(os.environ['HOME'], 'openvpn-ca')) == False:
+  vpn_init_proc = subprocess.Popen('bash /sentinel/openvpn.sh', shell=True)
+  vpn_init_proc.wait()
+  if vpn_init_proc.returncode != 0:
+    exit()
+vpn_proc = subprocess.Popen('cd /etc/openvpn && openvpn server.conf >> /dev/null 2>&1', shell=True)
 
 pip3_proc = subprocess.Popen(' '.join([
     'pip3',

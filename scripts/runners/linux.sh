@@ -4,11 +4,8 @@ DOCKER=$(which 'docker')
 IMAGE_LABEL='sentinelbeta/sentinel'
 
 do_update() {
-  CONTAINER_ID=$(docker ps -a -q -f name=sentinel)
-  if [ ${#CONTAINER_ID} -gt 0 ]; then
-    do_stop
-    docker rm $CONTAINER_ID
-  fi
+  do_stop --purge-all
+  IMAGE_ID=$(docker images -a -f reference=$IMAGE_LABEL -q)
   if [ ${#IMAGE_ID} -gt 0 ]; then
     docker rmi $IMAGE_ID
   fi
@@ -31,8 +28,8 @@ do_start() {
           CONTAINER_NAME="sentinel_node"
         elif [ "$2" == "main" ]; then
           CONTAINER_NAME="sentinel_main"
-          PORTS="-p 30303:30303 -p 30303:30303/udp -p 8545:8545"
-          VOLUME="-v $HOME/.sentinel:/root"
+          PORTS="-p 30303:30303 -p 30303:30303/udp -p 8545:8545 -p 1194:1194/udp"
+          VOLUME="-v $HOME/.sentinel/.ethereum:/root/.ethereum"
         fi
         shift
       ;;
@@ -83,10 +80,10 @@ do_start() {
     fi
   else
     if [ ${#CONSOLE} -gt 0 ]; then
-      docker run --name "$CONTAINER_NAME-$NODE_NAME" -it $VOLUME \
+      docker run --name "$CONTAINER_NAME-$NODE_NAME" -it --privileged $VOLUME \
         -e NODE_NAME=$NODE_NAME $BOOTNODE_URL $MINER $CONSOLE $V5 $ETHERBASE $BOOTNODE $PORTS $IMAGE_LABEL
     else
-      docker run --name "$CONTAINER_NAME-$NODE_NAME" -d $VOLUME \
+      docker run --name "$CONTAINER_NAME-$NODE_NAME" -d --privileged $VOLUME \
         -e NODE_NAME=$NODE_NAME $BOOTNODE_URL $MINER $CONSOLE $V5 $ETHERBASE $BOOTNODE $PORTS $IMAGE_LABEL
     fi
   fi
