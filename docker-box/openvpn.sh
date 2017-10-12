@@ -18,6 +18,7 @@ ifconfig-pool-persist ipp.txt
 push "redirect-gateway def1 bypass-dhcp"
 push "dhcp-option DNS 208.67.222.222"
 push "dhcp-option DNS 208.67.220.220"
+duplicate-cn
 keepalive 10 120
 tls-auth $KEYS/ta.key 0
 key-direction 0
