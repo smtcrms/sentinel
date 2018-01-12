@@ -10,9 +10,8 @@ class ETHHelper(object):
         eth_manager.add_keystore(from_addr, keystore)
         sleep(1.0)  # Need to check
         if unit == 'ETH':
-            transaction = {'from': from_addr, 'to': to_addr, 'value': amount}
             error, tx_hash = eth_manager.transfer_amount(
-                from_addr, password, transaction)
+                from_addr, to_addr, amount, password)
         else:
             error, tx_hash = contract_manager.transfer_amount(
                 from_addr, to_addr, amount, password, session_id)

@@ -1,3 +1,6 @@
+import rlp
+from ethereum.transactions import Transaction
+
 from .eth import eth_manager
 from ..config import SENTINEL_ABI
 from ..config import SENTINEL_ADDRESS
@@ -17,8 +20,10 @@ class ContractManager(object):
         self.vpn_service = vpn_service
         self.eth_manager = eth_manager
         self.contracts = [
-            self.eth_manager.web3.eth.contract(contract_name=sentinel['name'], abi=sentinel['abi'], address=sentinel['address']),
-            self.eth_manager.web3.eth.contract(contract_name=vpn_service['name'], abi=vpn_service['abi'], address=vpn_service['address'])
+            self.eth_manager.web3.eth.contract(
+                contract_name=sentinel['name'], abi=sentinel['abi'], address=sentinel['address']),
+            self.eth_manager.web3.eth.contract(
+                contract_name=vpn_service['name'], abi=vpn_service['abi'], address=vpn_service['address'])
         ]
 
     def get_balance(self, account_addr):
@@ -29,25 +34,34 @@ class ContractManager(object):
             return {'code': 201, 'error': str(err)}, None
         return None, balance / (DECIMALS * 1.0)
 
-    def transfer_amount(self, account_addr, to_addr, amount,
+    def transfer_amount(self, from_addr, to_addr, amount,
                         password, session_id=None):
         try:
-            self.eth_manager.web3.personal.unlockAccount(
-                account_addr, password)
             if session_id is None:
-                tx_hash = self.contracts[0].transact(
-                    {'from': account_addr}).transfer(to_addr, amount)
+                tx = Transaction(nonce=eth_manager.web3.eth.getTransactionCount(from_addr),
+                                 gasprice=eth_manager.web3.eth.gasPrice,
+                                 startgas=100000,
+                                 to=self.sentinel['address'],
+                                 value=0,
+                                 data=eth_manager.web3.toBytes(hexstr=self.contracts[0].encodeABI(fn_name='transfer', args=[to_addr, amount])))
             else:
-                tx_hash = self.contracts[1].transact(
-                    {'from': account_addr}).payVpnSession(sentinel['address'], amount, session_id)
-            self.eth_manager.web3.personal.lockAccount(account_addr)
+                tx = Transaction(nonce=eth_manager.web3.eth.getTransactionCount(from_addr),
+                                 gasprice=eth_manager.web3.eth.gasPrice,
+                                 startgas=100000,
+                                 to=self.sentinel['address'],
+                                 value=0,
+                                 data=eth_manager.web3.toBytes(hexstr=self.contracts[1].encodeABI(fn_name='payVpnSession', args=[self.sentinel['address'], amount, session_id])))
+            tx.sign(eth_manager.get_privatekey(from_addr, password))
+            raw_tx = eth_manager.web3.toHex(rlp.encode(tx))
+            tx_hash = eth_manager.web3.eth.sendRawTransaction(raw_tx)
         except Exception as err:
             return {'code': 202, 'error': str(err)}, None
         return None, tx_hash
 
     def get_due_amount(self, account_addr):
         try:
-            due = self.contracts[1].call({'from': account_addr}).getDueAmountOf(account_addr)
+            due = self.contracts[1].call(
+                {'from': account_addr}).getDueAmountOf(account_addr)
         except Exception as err:
             return {'code': 203, 'error': str(err)}, None
         return None, due

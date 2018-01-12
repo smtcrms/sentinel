@@ -1,7 +1,9 @@
+import rlp
 import json
 import time
 from glob import glob
 from os import path, unlink
+from ethereum.transactions import Transaction
 from ethereum.tools import keys
 from web3 import Web3, IPCProvider, HTTPProvider
 from ..utils import logger
@@ -77,12 +79,17 @@ class ETHManager(object):
             return {'code': 106, 'error': str(err)}, None
         return None, balance / ((10 ** 18) * 1.0)
 
-    def transfer_amount(self, account_addr, password, transaction):
+    def transfer_amount(self, from_addr, to_addr, value, password):
         try:
-            account_addr = transaction['from']
-            self.web3.personal.unlockAccount(account_addr, password)
-            tx_hash = self.web3.eth.sendTransaction(transaction)
-            self.web3.personal.lockAccount(account_addr)
+            tx = Transaction(nonce=eth_manager.web3.eth.getTransactionCount(from_addr),
+                             gasprice=eth_manager.web3.eth.gasPrice,
+                             startgas=100000,
+                             to=to_addr,
+                             value=value,
+                             data='')
+            tx.sign(self.get_privatekey(from_addr, password))
+            raw_tx = self.web3.toHex(rlp.encode(tx))
+            tx_hash = self.web3.eth.sendRawTransaction(raw_tx)
         except Exception as err:
             return {'code': 107, 'error': str(err)}, None
         return None, tx_hash
@@ -95,5 +102,5 @@ class ETHManager(object):
         return None, receipt
 
 
-eth_manager = ETHManager()
+eth_manager = ETHManager(provider='rpc', RPC_url='https://api.myetherapi.com/eth')
 logger.info(eth_manager.web3.isConnected())
