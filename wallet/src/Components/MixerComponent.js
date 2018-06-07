@@ -2,7 +2,7 @@ import React from 'react';
 import {
     MuiThemeProvider, Step, Stepper, StepLabel, RaisedButton, FlatButton, TextField, RadioButtonGroup,
     RadioButton, Slider, Table, TableBody, TableHeader, TableHeaderColumn, TableRow, TableRowColumn,
-    Snackbar
+    Snackbar, Checkbox
 } from 'material-ui';
 import { Grid, Row, Col } from 'react-flexbox-grid';
 import { getMixerNodesList, getMixerToAddress, startMix } from '../Actions/AccountActions';
@@ -52,6 +52,30 @@ class MixerComponent extends React.Component {
                         'eth': 10,
                         'sent': 75
                     }
+                },
+                {
+                    'account_addr': '0x929',
+                    'service_charge': 15,
+                    'balances': {
+                        'eth': 10,
+                        'sent': 75
+                    }
+                },
+                {
+                    'account_addr': '0x939',
+                    'service_charge': 15,
+                    'balances': {
+                        'eth': 10,
+                        'sent': 75
+                    }
+                },
+                {
+                    'account_addr': '0x919',
+                    'service_charge': 15,
+                    'balances': {
+                        'eth': 10,
+                        'sent': 75
+                    }
                 }
             ],
             destAddress: '',
@@ -59,7 +83,7 @@ class MixerComponent extends React.Component {
             unit: 'SENT',
             password: '',
             nextDisabled: true,
-            selectedRow: [],
+            selectedRow: null,
             snackOpen: false,
             snackMessage: '',
             mixerToAddr: ''
@@ -93,7 +117,7 @@ class MixerComponent extends React.Component {
             self.setState({
                 stepIndex: stepIndex + 1,
                 finished: stepIndex >= 2,
-                nextDisabled: self.state.selectedRow.length ? self.state.selectedRow[0] === -1 : false
+                nextDisabled: self.state.selectedRow === null
             });
         })
     }
@@ -101,7 +125,7 @@ class MixerComponent extends React.Component {
     getMixerTo = () => {
         let self = this;
         const { stepIndex } = this.state;
-        let selectedAddr = this.state.pools[this.state.selectedRow[0]].account_addr;
+        let selectedAddr = this.state.pools[this.state.selectedRow].account_addr;
         getMixerToAddress(selectedAddr, function (err, data) {
             self.setState({
                 stepIndex: stepIndex + 1,
@@ -192,11 +216,19 @@ class MixerComponent extends React.Component {
         }
     }
 
-    handleRowSelection = (selectedRows) => {
-        this.setState({
-            selectedRow: selectedRows,
-            nextDisabled: false
-        });
+    handleRowSelection = (index) => {
+        console.log("Ind..", index, this.state.nextDisabled)
+        if (this.state.selectedRow === index)
+            this.setState({
+                selectedRow: null,
+                nextDisabled: true
+            });
+        else {
+            this.setState({
+                selectedRow: index,
+                nextDisabled: false
+            });
+        }
     };
 
     snackRequestClose = () => {
@@ -276,8 +308,9 @@ class MixerComponent extends React.Component {
                     />
                 </div>)
             case 1:
-                return (<div>
-                    <Table onRowSelection={this.handleRowSelection}>
+                return (<div
+                    style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', height: 370, overflowY: 'auto', padding: '2%' }}>
+                    {/* <Table onRowSelection={this.handleRowSelection}>
                         <TableHeader>
                             <TableRow>
                                 <TableHeaderColumn style={styles.headerColumnStyle}>Service Charge</TableHeaderColumn>
@@ -294,14 +327,29 @@ class MixerComponent extends React.Component {
                                 </TableRow>
                             ))}
                         </TableBody>
-                    </Table>
+                    </Table> */}
+                    {this.state.pools.map((row, index) => (
+                        <div style={{ margin: '2% 5%', backgroundColor: '#d2e2dd', padding: '3%', boxShadow: 'grey 0px 0px 15px 1px' }}>
+                            <span>
+                                <Checkbox
+                                    label=""
+                                    checked={this.state.selectedRow === index}
+                                    onCheck={this.handleRowSelection.bind(this, index)}
+                                />
+                                <p>Service Charge: {row.service_charge}</p>
+                                <p>ETH Balance: {row.balances.eth}</p>
+                                <p>SENT Balance: {row.balances.sent}</p>
+                            </span>
+                        </div>
+                    ))}
+
                 </div>)
             case 2:
                 return (<div>
                     <span style={styles.detailsHeadingStyle}>Destination Address: </span>
                     <span style={styles.detailsStyle}>{this.state.destAddress}</span><br />
                     <span style={styles.detailsHeadingStyle}>Service Charge: </span>
-                    <span style={styles.detailsStyle}>{this.state.pools[this.state.selectedRow[0]].service_charge} + Gas Price</span><br />
+                    <span style={styles.detailsStyle}>{this.state.pools[this.state.selectedRow].service_charge} + Gas Price</span><br />
                     <span style={styles.detailsHeadingStyle}>Amount: </span>
                     <span style={styles.detailsStyle}>{this.state.amount} {this.state.unit}</span>
                     <TextField
@@ -371,9 +419,9 @@ class MixerComponent extends React.Component {
                                         <RaisedButton
                                             label={stepIndex === 2 ? 'Confirm' : 'Next'}
                                             primary={true}
-                                            disabled={nextDisabled || (stepIndex === 1 && selectedRow.length === 0)}
+                                            disabled={nextDisabled || (stepIndex === 1 && selectedRow === null)}
                                             onClick={this.handleNext}
-                                            buttonStyle={nextDisabled || (stepIndex === 1 && selectedRow.length === 0) ?
+                                            buttonStyle={nextDisabled || (stepIndex === 1 && selectedRow === null) ?
                                                 { backgroundColor: '#c7c9d4' } : { backgroundColor: '#2f3245' }}
                                             style={{
                                                 borderRadius: 5,
