@@ -67,9 +67,11 @@ class VPNComponent extends Component {
             dueAmount: 0,
             dueSession: null,
             isTor: false,
+            torIp: '',
             sessionName: '',
             startDownload: 0,
-            startUpload: 0
+            startUpload: 0,
+            showStatus: false
         }
         this.handleZoomIn = this.handleZoomIn.bind(this)
         this.handleZoomOut = this.handleZoomOut.bind(this)
@@ -107,9 +109,11 @@ class VPNComponent extends Component {
             this.getVPNs()
         }
         if (nextProps.status === false)
-            this.setState({ status: nextProps.status, selectedVPN: null, usage: null });
+            this.setState({ status: nextProps.status, selectedVPN: null, usage: null, showStatus: false });
         else
             this.setState({ status: nextProps.status, selectedVPN: nextProps.vpnData ? nextProps.vpnData.vpn_addr : null });
+        if (nextProps.status && nextProps.status !== this.state.status)
+            this.checkTor();
     }
 
     getDueAmount() {
@@ -175,7 +179,7 @@ class VPNComponent extends Component {
             }
         }).then(function (response) {
             response.json().then(function (resp) {
-                self.setState({ isTor: resp['isTor'] })
+                self.setState({ isTor: resp['IsTor'], torIp: resp['IP'], showStatus: true })
             })
         })
     }
@@ -231,7 +235,8 @@ class VPNComponent extends Component {
                             //that.returnVPN();
                             that.setState({
                                 selectedVPN: that.state.activeVpn.account_addr, status: true, statusSnack: false, showInstruct: false,
-                                openSnack: true, snackMessage: `${lang[that.props.lang].ConnectedVPN}`, sessionName: data
+                                openSnack: true, snackMessage: `${lang[that.props.lang].ConnectedVPN}`, sessionName: data,
+                                showStatus: true
                             })
                             that.props.changeTest(false)
                             that.calculateUsage(true);
@@ -258,13 +263,13 @@ class VPNComponent extends Component {
                             that.props.changeTest(false)
                         }
                         else {
-                            that.props.onChange();
-                            //that.returnVPN();
-                            that.setState({ selectedVPN: that.state.activeVpn.account_addr, status: true, statusSnack: false, showInstruct: false, openSnack: true, snackMessage: `${lang[that.props.lang].ConnectedVPN}. ${message}` })
-                            that.props.changeTest(false)
                             setTimeout(function () {
                                 that.checkTor();
-                            }, 5000)
+                                that.props.onChange();
+                                //that.returnVPN();
+                                that.setState({ selectedVPN: that.state.activeVpn.account_addr, status: true, statusSnack: false, showInstruct: false, openSnack: true, snackMessage: `${lang[that.props.lang].ConnectedVPN}. ${message}` })
+                                that.props.changeTest(false)
+                            }, 3000);
                         }
                     })
                 }
@@ -296,7 +301,7 @@ class VPNComponent extends Component {
                     that.props.onChange();
                     that.props.changeTest(false);
                     sendUsage(that.props.local_address, that.state.selectedVPN, null);
-                    that.setState({ selectedVPN: null, usage: null, statusSnack: false, status: false, openSnack: true, snackMessage: lang[that.props.lang].DisconnectVPN })
+                    that.setState({ selectedVPN: null, usage: null, statusSnack: false, status: false, showStatus: false, openSnack: true, snackMessage: lang[that.props.lang].DisconnectVPN })
                 }
             });
         }
@@ -310,7 +315,7 @@ class VPNComponent extends Component {
                 else {
                     that.props.onChange();
                     that.props.changeTest(false);
-                    that.setState({ selectedVPN: null, usage: null, statusSnack: false, status: false, openSnack: true, snackMessage: lang[that.props.lang].DisconnectVPN })
+                    that.setState({ selectedVPN: null, usage: null, statusSnack: false, showStatus: false, isTor: false, status: false, openSnack: true, snackMessage: lang[that.props.lang].DisconnectVPN })
                 }
             });
         }
@@ -399,7 +404,6 @@ class VPNComponent extends Component {
             if (err) {
             }
             else {
-                console.log("Usage...", usage)
                 self.props.onChange();
                 self.setState({ usage: usage })
             }
@@ -815,10 +819,24 @@ class VPNComponent extends Component {
                 {!this.state.mapActive && !this.props.status && this.state.dueAmount === 0 ?
                     null :
                     <div style={styles.vpnDetails}>
-                        {this.props.status === true ?
+                        {this.props.status === true && this.state.showStatus ?
                             <div style={{ fontSize: 14 }}>
-                                <p>Tor Connected: {this.state.isTor ? 'True' : 'False'}</p>
-                                <p>IP: {this.props.vpnData.ip}</p>
+                                {!this.state.isSock ?
+                                    <span>
+                                        <p style={{ fontWeight: 'bold', textAlign: 'center', fontSize: 16, marginBottom: -10 }}>
+                                            {this.state.isTor ?
+                                                <span>
+                                                    <span style={{ color: '#1ce8bd' }}>Tor is Enabled </span>
+                                                    <img src={'../src/Images/tor-on.png'} alt="tor on" style={{ width: 20, height: 20, marginTop: -6 }} />
+                                                </span> :
+                                                <span>
+                                                    <span style={{ color: '#e88989' }}>Tor is not enabled </span>
+                                                    <img src={'../src/Images/tor-off.png'} alt="tor off" style={{ width: 20, height: 20, marginTop: -6 }} />
+                                                </span>
+                                            }</p>
+                                        <hr />
+                                    </span> : null}
+                                <p>IP: {this.state.isTor ? this.state.torIp : this.props.vpnData.ip}</p>
                                 <p>{lang[language].Location}: {this.props.vpnData.location}</p>
                                 <p>{lang[language].Speed}: {this.props.vpnData.speed}</p>
                                 <p>{lang[language].DownloadUsage}: {this.state.usage ? (parseInt(this.state.usage.down ? this.state.usage.down : 0) / (1024 * 1024)).toFixed(2) : 0.00} MB</p>
@@ -834,7 +852,7 @@ class VPNComponent extends Component {
                             :
                             <div>
                                 {this.state.dueAmount === 0 ?
-                                    lang[language].ClickVPN :
+                                    (this.props.status ? null : lang[language].ClickVPN) :
                                     <span>
                                         <span onClick={() => { this.payDue() }} data-tip data-for="payTip" style={{ cursor: 'pointer' }}>
                                             {lang[language].Uhave} {parseInt(this.state.dueAmount) / (10 ** 8)} SENTS {lang[language].Due}
