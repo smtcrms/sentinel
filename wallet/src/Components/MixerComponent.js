@@ -2,7 +2,7 @@ import React from 'react';
 import {
     MuiThemeProvider, Step, Stepper, StepLabel, RaisedButton, FlatButton, TextField, RadioButtonGroup,
     RadioButton, Slider, Table, TableBody, TableHeader, TableHeaderColumn, TableRow, TableRowColumn,
-    Snackbar, Checkbox
+    Snackbar, Checkbox, Paper
 } from 'material-ui';
 import { Grid, Row, Col } from 'react-flexbox-grid';
 import { getMixerNodesList, getMixerToAddress, startMix } from '../Actions/AccountActions';
@@ -310,37 +310,19 @@ class MixerComponent extends React.Component {
             case 1:
                 return (<div
                     style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', height: 370, overflowY: 'auto', padding: '2%' }}>
-                    {/* <Table onRowSelection={this.handleRowSelection}>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHeaderColumn style={styles.headerColumnStyle}>Service Charge</TableHeaderColumn>
-                                <TableHeaderColumn style={styles.headerColumnStyle}>SENT Balance</TableHeaderColumn>
-                                <TableHeaderColumn style={styles.headerColumnStyle}>ETH Balance</TableHeaderColumn>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody deselectOnClickaway={false}>
-                            {this.state.pools.map((row, index) => (
-                                <TableRow key={index} selected={this.isSelected(index)}>
-                                    <TableRowColumn>{row.service_charge}</TableRowColumn>
-                                    <TableRowColumn>{row.balances.eth}</TableRowColumn>
-                                    <TableRowColumn>{row.balances.sent}</TableRowColumn>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table> */}
                     {this.state.pools.map((row, index) => (
-                        <div style={{ margin: '2% 5%', backgroundColor: '#d2e2dd', padding: '3%', boxShadow: 'grey 0px 0px 15px 1px' }}>
+                        <Paper zDepth={2} style={{ margin: '2% 5%', padding: '3%', backgroundColor: index === this.state.selectedRow ? '#d2e2dd' : 'white' }}>
                             <span>
                                 <Checkbox
                                     label=""
                                     checked={this.state.selectedRow === index}
                                     onCheck={this.handleRowSelection.bind(this, index)}
                                 />
-                                <p>Service Charge: {row.service_charge}</p>
-                                <p>ETH Balance: {row.balances.eth}</p>
-                                <p>SENT Balance: {row.balances.sent}</p>
+                                <p><span style={{ fontWeight: 'bold' }}>Service Charge: </span>{row.service_charge}</p>
+                                <p><span style={{ fontWeight: 'bold' }}>ETH Balance: </span>{row.balances.eth}</p>
+                                <p><span style={{ fontWeight: 'bold' }}>SENT Balance: </span>{row.balances.sent}</p>
                             </span>
-                        </div>
+                        </Paper>
                     ))}
 
                 </div>)
