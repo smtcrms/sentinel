@@ -77,7 +77,7 @@ export function tokenTransaction(from_addr, to_addr, amount, gas_price, gas, pri
     }
 }
 
-export function ethTransaction(from_addr, to_addr, amount, gas_price, gas, privateKey, cb) {
+export function ethTransaction(from_addr, to_addr, amount, gas_price, gas, privateKey, isPivx, cb) {
     try {
         setWeb3();
         var txParams = {
@@ -86,7 +86,7 @@ export function ethTransaction(from_addr, to_addr, amount, gas_price, gas, priva
             gasLimit: gas,
             from: from_addr,
             to: to_addr,
-            value: web3.toHex(amount),
+            value: isPivx ? web3.toHex(web3.toWei(amount, 'ether')) : web3.toHex(amount),
             data: ''
         }
         var tx = new EthereumTx(txParams);
@@ -154,7 +154,7 @@ export function swapTransaction(from_addr, ether_addr, contract_addr, amount, pr
                 var txParams = {
                     nonce: web3.toHex(web3.eth.getTransactionCount(from_addr)),
                     gasPrice: 20 * (10 ** 9),
-                    gasLimit: 21000,
+                    gasLimit: 100000,
                     from: from_addr,
                     to: ether_addr,
                     value: web3.toHex(amount),

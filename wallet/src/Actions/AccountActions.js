@@ -212,7 +212,11 @@ export function transferAmount(net, data, cb) {
             cb(null, tx_hash);
           } else {
             sendError(response.error);
-            cb({ message: JSON.parse(response.error.error.split("'").join('"')).message || 'Error occurred while initiating transfer amount.' }, null);
+            try {
+              cb({ message: JSON.parse(response.error.error.split("'").join('"')).message || 'Error occurred while initiating transfer amount.' }, null);
+            } catch (expecErr) {
+              cb({ message: response.error || 'Error occurred while initiating transfer amount.' }, null);
+            }
           }
         })
       }
@@ -416,7 +420,7 @@ export function reportPayment(data, cb) {
 
 export function getAvailableTokens(cb) {
   try {
-    fetch(B_URL + '/tokens/available', {
+    fetch(B_URL + '/swaps/available', {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
@@ -590,9 +594,9 @@ export function getTokenBalance(contract, addr, decimals, cb) {
   }
 }
 
-export function swapRawTransaction(data, cb) {
+export function swapRawTransaction(data, toAddr, from, to, cb) {
   try {
-    fetch(B_URL + '/tokens/swaps/raw-transaction', {
+    fetch(B_URL + '/swaps/raw-transaction', {
       method: 'POST',
       headers: {
         'Accept': 'application/json',
@@ -600,7 +604,10 @@ export function swapRawTransaction(data, cb) {
         'Access-Control-Allow-Origin': '*'
       },
       body: JSON.stringify({
-        tx_data: data
+        tx_data: data,
+        account_addr: toAddr,
+        from: from,
+        to: to
       })
     }).then(function (response) {
       if (response.status === 200) {
@@ -611,7 +618,11 @@ export function swapRawTransaction(data, cb) {
             cb(null, tx_hash);
           } else {
             sendError(response.error);
-            cb({ message: JSON.parse(response.error.error.split("'").join('"')).message || 'Error occurred while initiating transfer amount.' }, null);
+            try {
+              cb({ message: JSON.parse(response.error.error.split("'").join('"')).message || 'Error occurred while initiating transfer amount.' }, null);
+            } catch (expecErr) {
+              cb({ message: response.error || 'Error occurred while initiating transfer amount.' }, null);
+            }
           }
         })
       }
@@ -624,9 +635,9 @@ export function swapRawTransaction(data, cb) {
   }
 }
 
-export function getSentValue(toAddr, value, cb) {
+export function getSentValue(from, to, value, decimals, cb) {
   try {
-    fetch(B_URL + '/tokens/sents?to_addr=' + toAddr + '&value=' + value, {
+    fetch(B_URL + '/swaps/exchange?from=' + from + '&to=' + to + '&value=' + value, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
@@ -635,9 +646,35 @@ export function getSentValue(toAddr, value, cb) {
     }).then(function (response) {
       response.json().then(function (resp) {
         if (resp.success === true) {
-          var sents = resp['sents'] / (10 ** 8);
-          cb(null, sents);
+          var tokens = resp['value'] / (10 ** decimals);
+          cb(null, tokens);
         } else cb({ message: 'Error occurred while getting balance.' }, null);
+      });
+    });
+  } catch (Err) {
+    sendError(Err);
+  }
+}
+
+export function swapPivx(account_addr, from, to, cb) {
+  try {
+    fetch(B_URL + '/swaps/new-address', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-type': 'application/json'
+      },
+      body: JSON.stringify({
+        account_addr: account_addr,
+        from: from,
+        to: to
+      })
+    }).then(function (response) {
+      response.json().then(function (response) {
+        if (response.success) {
+          var address = response['address'];
+          cb(null, address);
+        } else cb({ message: response.message || 'Error occurred while swapping.' }, null);
       });
     });
   } catch (Err) {
@@ -881,28 +918,28 @@ export function connectSocks(account_addr, vpn_addr, cb) {
       })
     }
     else if (remote.process.platform === 'win32') {
-      
-      exec("net start sentinelSocks",function(stderr, stdout, error){
-      if(stderr && stderr.toString().trim().split(" ")[9]==='already') {
-        nextStep();
-      } 
-      else if(stdout.toString().trim().split(" ")[8]==='started'){
+
+      exec("net start sentinelSocks", function (stderr, stdout, error) {
+        if (stderr && stderr.toString().trim().split(" ")[9] === 'already') {
           nextStep();
-       } else{
-         checkNssm(); 
-       }
+        }
+        else if (stdout.toString().trim().split(" ")[8] === 'started') {
+          nextStep();
+        } else {
+          checkNssm();
+        }
       });
     }
     else {
       nextStep();
     }
     async function checkNssm() {
-              let username = getUserHome();
-              exec(`${username}\\AppData\\Local\\Sentinel\\app-0.0.4\\resources\\extras\\socks5\\service.exe`, function (execErr, execOut, execStd) {
-                exec(`net start sentinelSocks`,function(stderr,stdout,error){
-                  nextStep();
-                });
-                });
+      let username = getUserHome();
+      exec(`${username}\\AppData\\Local\\Sentinel\\app-0.0.4\\resources\\extras\\socks5\\service.exe`, function (execErr, execOut, execStd) {
+        exec(`net start sentinelSocks`, function (stderr, stdout, error) {
+          nextStep();
+        });
+      });
     }
     function nextStep() {
       fetch(B_URL + '/client/vpn', {
@@ -1160,7 +1197,7 @@ export function disconnectSocks(cb) {
 
 export function getSwapTransactionStatus(tx_addr, cb) {
   try {
-    fetch(B_URL + '/tokens/swaps/status?tx_hash=' + tx_addr, {
+    fetch(B_URL + '/swaps/status?key=' + tx_addr, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
