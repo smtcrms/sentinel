@@ -106,19 +106,23 @@ class MixerComponent extends React.Component {
     getMixerNodes = () => {
         let self = this;
         const { stepIndex } = this.state;
-        let eth, sent;
-        eth = this.state.unit === 'ETH' ? this.state.amount * Math.pow(10, 18) : 0;
-        sent = this.state.unit === 'SENT' ? this.state.amount * Math.pow(10, 8) : 0;
+        let amount;
+        amount = this.state.unit === 'ETH' ? this.state.amount * Math.pow(10, 18) : this.state.amount * Math.pow(10, 8);
+        // sent = this.state.unit === 'SENT' ? this.state.amount * Math.pow(10, 8) : 0;
         let body = {
-            eth: eth,
-            sent: sent
+            value: amount,
+            coin_symbol: this.state.unit
         }
         getMixerNodesList(body, function (err, data) {
-            self.setState({
-                stepIndex: stepIndex + 1,
-                finished: stepIndex >= 2,
-                nextDisabled: self.state.selectedRow === null
-            });
+            if (err) { }
+            else {
+                self.setState({
+                    stepIndex: stepIndex + 1,
+                    finished: stepIndex >= 2,
+                    pool: data,
+                    nextDisabled: self.state.selectedRow === null
+                });
+            }
         })
     }
 
@@ -127,12 +131,17 @@ class MixerComponent extends React.Component {
         const { stepIndex } = this.state;
         let selectedAddr = this.state.pools[this.state.selectedRow].account_addr;
         getMixerToAddress(selectedAddr, function (err, data) {
-            self.setState({
-                stepIndex: stepIndex + 1,
-                finished: stepIndex >= 2,
-                nextDisabled: true,
-                mixerToAddr: ''
-            });
+            if (err) {
+                console.log(err.message);
+            }
+            else {
+                self.setState({
+                    stepIndex: stepIndex + 1,
+                    finished: stepIndex >= 2,
+                    nextDisabled: true,
+                    mixerToAddr: data
+                });
+            }
         })
     }
 
@@ -181,12 +190,19 @@ class MixerComponent extends React.Component {
             tx_data: tx_data,
             net: net
         }
-        startMix(body, function (err, tx_addr) {
-            self.setState({
-                stepIndex: 0,
-                finished: false,
-                nextDisabled: true
-            });
+        startMix(body, function (err, data) {
+            if (err) {
+                self.setState({ snackOpen: true, snackMessage: err.message })
+            }
+            else {
+                self.setState({
+                    stepIndex: 0,
+                    finished: false,
+                    nextDisabled: false,
+                    snackOpen: true,
+                    snackMessage: data.message
+                });
+            }
         });
     }
 
@@ -217,7 +233,6 @@ class MixerComponent extends React.Component {
     }
 
     handleRowSelection = (index) => {
-        console.log("Ind..", index, this.state.nextDisabled)
         if (this.state.selectedRow === index)
             this.setState({
                 selectedRow: null,

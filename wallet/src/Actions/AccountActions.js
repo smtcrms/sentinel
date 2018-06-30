@@ -457,7 +457,9 @@ export function getMixerNodesList(data, cb) {
       body: JSON.stringify(data)
     }).then(function (response) {
       if (response.status === 200) {
-        response.json().then(function (response) {
+        response.json().then(function (resp) {
+          let list = resp.list;
+          cb(null, list)
         })
       }
       else {
@@ -484,6 +486,11 @@ export function getMixerToAddress(account_addr, cb) {
     }).then(function (response) {
       if (response.status === 200) {
         response.json().then(function (response) {
+          if (response.success === true) {
+            cb(null, response.to_address);
+          } else {
+            cb({ message: response.message }, null);
+          }
         })
       }
       else {
@@ -508,6 +515,12 @@ export function startMix(data, cb) {
     }).then(function (response) {
       if (response.status === 200) {
         response.json().then(function (response) {
+          if (response.success) {
+            cb(null, response)
+          }
+          else {
+            cb({ message: response.message }, null)
+          }
         })
       }
       else {
