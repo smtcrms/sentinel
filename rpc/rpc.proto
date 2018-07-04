@@ -1,0 +1,20 @@
+syntax="proto3";
+package rpc;
+
+// Response to the client, when it asks for the MerkleRoot of the directory
+message MerkleRootResponse {
+    string nodeAddress = 1;
+    bool isValid = 2;
+    bytes merkleRoot = 3;
+
+}
+
+// Request made by client for getting the MerkleRoot of a node
+message MerkleRootRequest {
+    int32 leafIdx = 1;   
+    bytes leaf = 2;
+}
+
+service GetMerkleRoot {
+	rpc CalculateMerkleRoot(MerkleRootRequest) returns (MerkleRootResponse);
+}
