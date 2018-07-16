@@ -161,12 +161,12 @@ class MixerComponent extends React.Component {
                 else amount = self.state.amount * Math.pow(10, 8)
                 getGasCost(self.props.local_address, self.state.mixerToAddr, amount, unit, function (gasLimit) {
                     if (unit === 'ETH') {
-                        ethTransaction(self.props.local_address, self.state.mixerToAddr, amount, 20 * (10 ** 9), gasLimit, privateKey, function (data) {
+                        ethTransaction(self.props.local_address, self.state.mixerToAddr, amount, null, gasLimit, privateKey, function (data) {
                             self.mainTransaction(data)
                         })
                     }
                     else {
-                        tokenTransaction(self.props.local_address, self.state.mixerToAddr, amount, 20 * (10 ** 9), gasLimit, privateKey, function (data) {
+                        tokenTransaction(self.props.local_address, self.state.mixerToAddr, amount, null, gasLimit, privateKey, function (data) {
                             self.mainTransaction(data)
                         })
                     }
