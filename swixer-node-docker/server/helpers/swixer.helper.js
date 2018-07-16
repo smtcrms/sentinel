@@ -4,16 +4,16 @@ var { createHash } = require('crypto');
 let generateSwixHash = (swixDetails, cb) => {
   let { fromSymbol,
     toSymbol,
-    clientAddress,
+    refundAddress,
     toAddress,
     destinationAddress,
     delayInSeconds } = swixDetails;
   try {
     swixDetails = JSON.stringify({
-      clientAddress,
       delayInSeconds,
       destinationAddress,
       fromSymbol,
+      refundAddress,
       toAddress,
       toSymbol
     });

@@ -87,7 +87,7 @@ let getBalances = (req, res) => {
           }
         });
     }, (addresses, next) => {
-      accountHelper.getBalancesOfAccounts(addresses,
+      accountHelper.getBalancesOfAddresses(addresses, ['ETH', 'SENT', 'BNB'],
         (error, balancesOfAddresses) => {
           if (error) next({
             status: 500,

@@ -9,20 +9,36 @@ let getAccount = (coinSymbol, cb) => {
     });
 };
 
-let getBalance = (address, coinSymbol, cb) => {
+let getBalanceOfAddress = (address, coinSymbol, cb) => {
   accounts.getBalance(address, coinSymbol,
     (error, balance) => {
       cb(error, balance);
     });
 };
 
-let getBalancesOfAccount = (address, cb) => {
+let getBalanceOfAddresses = (addresses, coinSymbol, cb) => {
   let balances = {};
-  let accountType = accounts.getAccountType(address);
-  let coinSymbols = accountType === 'ETH' ? ['ETH', 'SENT', 'BNB'] : ['PIVX'];
+  async.each(addresses,
+    (address, next) => {
+      getBalanceOfAddress(address, coinSymbol,
+        (error, balance) => {
+          if (error) next(error);
+          else {
+            balances[address] = balance;
+            next(null);
+          }
+        });
+    }, (error) => {
+      if (error) cb(error, null);
+      else cb(null, balances);
+    });
+};
+
+let getBalancesOfAddress = (address, coinSymbols, cb) => {
+  let balances = {};
   async.each(coinSymbols,
     (coinSymbol, next) => {
-      getBalance(address, coinSymbol,
+      getBalanceOfAddress(address, coinSymbol,
         (error, balance) => {
           if (error) next(error);
           else {
@@ -36,11 +52,11 @@ let getBalancesOfAccount = (address, cb) => {
     });
 };
 
-let getBalancesOfAccounts = (addresses, cb) => {
+let getBalancesOfAddresses = (addresses, coinSymbols, cb) => {
   let balances = {};
   async.each(addresses,
     (address, next) => {
-      getBalancesOfAccount(address,
+      getBalancesOfAddress(address, coinSymbols,
         (error, _balances) => {
           if (error) next(error);
           else {
@@ -56,7 +72,8 @@ let getBalancesOfAccounts = (addresses, cb) => {
 
 module.exports = {
   getAccount,
-  getBalance,
-  getBalancesOfAccount,
-  getBalancesOfAccounts
+  getBalanceOfAddress,
+  getBalanceOfAddresses,
+  getBalancesOfAddress,
+  getBalancesOfAddresses
 };

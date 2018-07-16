@@ -1,7 +1,7 @@
 let mongoose = require('mongoose');
 
 
-let swixDetailsSchema = new mongoose.Schema({
+let swixSchema = new mongoose.Schema({
   fromSymbol: {
     type: String,
     required: true
@@ -10,7 +10,7 @@ let swixDetailsSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  clientAddress: {
+  refundAddress: {
     type: String,
     required: true
   },
@@ -35,27 +35,23 @@ let swixDetailsSchema = new mongoose.Schema({
     type: String,
     unique: true
   },
-  tries: {
+  status: {
     type: Number,
-    default: 0
+    default: 0,
   },
-  isScheduled: {
-    type: Boolean,
-    default: false,
+  fromAccountsCount: {
+    type: Number,
+    default: 4
   },
+  receivedAmount: Number,
   remainingAmount: Number,
-  lastUpdateOn: {
-    type: Date,
-    default: Date.now
-  },
-  message: {
-    type: String,
-    default: 'Swix added successfully.'
-  },
-  txInfos: Array
+  exchangeRate: Number,
+  updatedOn: Date,
+  inTxHash: String,
+  outTxHashes: Array
 }, {
     strict: true,
     versionKey: false
   });
 
-module.exports = mongoose.model('SwixDetails', swixDetailsSchema);
+module.exports = mongoose.model('Swix', swixSchema);

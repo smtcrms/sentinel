@@ -2,7 +2,7 @@ let axios = require('axios');
 let { master } = require('../config/vars');
 
 
-let getExchangeRate = (amount, fromSymbol, toSymbol, cb) => {
+let getExchangeRateValue = (amount, fromSymbol, toSymbol, cb) => {
   let url = `${master}/swix/rate?node=0x47bd80a152d0d77664d65de5789df575c9cabbdb&from=${fromSymbol}&to=${toSymbol}&value=${amount}`
   axios.get(url)
     .then((response) => {
@@ -22,5 +22,5 @@ let getExchangeRate = (amount, fromSymbol, toSymbol, cb) => {
 };
 
 module.exports = {
-  getExchangeRate
+  getExchangeRateValue
 };
