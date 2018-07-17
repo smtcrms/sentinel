@@ -41,25 +41,25 @@ else
             case $ENCMETHOD in
             1)
                 echo "You selected AES-256-CBC as your encryption method"
-                ENCMETHOD='AES-256-CBC'
+                ENCMETHOD=AES-256-CBC
                 ;;
             2)
                 echo "You selected AES-128-CBC as your encryption method"
-                ENCMETHOD='AES-128-CBC'
+                ENCMETHOD=AES-128-CBC
                 ;;
 
             3)
                 echo "You selected AES-256-GCM as your encryption method"
-                ENCMETHOD='AES-256-GCM'
+                ENCMETHOD=AES-256-GCM
                 ;;
 
             4)
                 echo "You selected AES-128-GCM as your encryption method"
-                ENCMETHOD='AES-128-GCM'
+                ENCMETHOD=AES-128-GCM
                 ;;
             *)
                 echo "Default method is selected as: AES-256-CBC"
-                ENCMETHOD='AES-256-CBC'
+                ENCMETHOD=AES-256-CBC
                 ;;
             esac
         fi
@@ -68,7 +68,7 @@ else
         read option
         if [ "$option" == "y" ] || [ "$option" == "Y" ]; then
             touch ${CONFIG_DATA_PATH}
-            echo '{"account_addr": "'${ADDRESS}'", "price_per_gb": '${PRICE}', "token": "", "enc_method": '${ENCMETHOD}'}' > ${CONFIG_DATA_PATH}
+            echo '{"account_addr": "'${ADDRESS}'", "price_per_gb": '${PRICE}', "token": "", "enc_method": "'${ENCMETHOD}'"}' > ${CONFIG_DATA_PATH}
             break
         fi
     done

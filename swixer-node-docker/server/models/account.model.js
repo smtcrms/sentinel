@@ -11,9 +11,13 @@ let accountSchema = new mongoose.Schema({
     unique: true
   },
   type: String,
-  generatedOn: {
+  addedOn: {
     type: Date,
     default: Date.now
+  },
+  isCreated: {
+    type: Boolean,
+    default: true
   }
 }, {
     strict: true,

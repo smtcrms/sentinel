@@ -122,7 +122,7 @@ let swixIt = (swixHash, cb) => {
   let swix = null;
   async.waterfall([
     (next) => {
-      swixerDbo.getSwix(swixHash,
+      swixerDbo.getSwix({ swixHash },
         (error, _swix) => {
           if (error) next({
             code: 301,
@@ -206,11 +206,13 @@ let scheduleIt = (swixHash, cb) => {
           }, null);
         });
     }, (next) => {
-      let { inTxHash,
+      let { fromSymbol,
+        toAddress,
+        inTxHash,
         receivedAmount } = swix;
       if (receivedAmount) next(null);
       else {
-        swixerHelper.isValidInTx(inTxHash,
+        swixerHelper.isValidInTx(toAddress, fromSymbol, inTxHash,
           (error, result) => {
             if (error) next({
               code: 103,
