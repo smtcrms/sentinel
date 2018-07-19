@@ -11,6 +11,7 @@ from sentinel.client import GetSocksList
 from sentinel.client import GetSwixDetails
 from sentinel.client import GetSwixStatus
 from sentinel.client import GetSwixerNodesList
+from sentinel.client import GetToken
 from sentinel.client import GetVpnCredentials
 from sentinel.client import GetVpnCurrentUsage
 from sentinel.client import GetVpnUsage
@@ -49,6 +50,7 @@ from sentinel.swixer import DeRegisterSwixerNode
 from sentinel.swixer import RegisterSwixerNode
 from sentinel.swixer import UpdateSwixerNodeInfo
 from sentinel.utils import JSONTranslator
+from sentinel.utils import auth_middleware
 
 
 class Up(object):
@@ -62,10 +64,11 @@ class Up(object):
 
 
 cors = CORS(allow_all_origins=True)
-server = falcon.API(middleware=[cors.middleware, JSONTranslator()])
+server = falcon.API(middleware=[cors.middleware, auth_middleware, JSONTranslator()])
 server.add_route('/', Up())
 
 # Clients
+server.add_route('/client/token', GetToken())
 server.add_route('/client/account', CreateNewAccount())
 server.add_route('/client/account/balance', GetBalance())
 server.add_route('/client/raw-transaction', RawTransaction())

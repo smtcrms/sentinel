@@ -1,6 +1,7 @@
 # coding=utf-8
 from .account import CreateNewAccount
 from .account import GetBalance
+from .auth import GetToken
 from .connection import UpdateConnection
 from .swixer import GetExchangeValue
 from .swixer import GetSwixDetails
