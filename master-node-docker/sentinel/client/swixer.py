@@ -124,6 +124,7 @@ class GetSwixDetails(object):
         client_address = str(req.body['client_address'])
         destination_address = str(req.body['destination_address'])
         delay_in_seconds = int(req.body['delay_in_seconds'])
+        refund_address =  str(req.body['refund_address'])
         from_token = tokens.get_token(from_symbol)
         to_token = tokens.get_token(to_symbol)
         value = 1.0 * (10 ** from_token['decimals'])
@@ -141,7 +142,7 @@ class GetSwixDetails(object):
             rate = tokens.exchange(from_token, to_token, value, node['service_charge'])
             rate = rate / (1.0 * (10 ** to_token['decimals']))
             account = get_account(node['ip'], from_symbol, to_symbol, client_address, destination_address,
-                                  delay_in_seconds,rate,client_address)
+                                  delay_in_seconds,rate,refund_address)
             if account is None:
                 message = {
                     'success': False,
