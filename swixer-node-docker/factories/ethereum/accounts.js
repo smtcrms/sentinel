@@ -10,15 +10,21 @@ let redisClient = redis.createClient();
 
 
 let getTransactionCount = (address, cb) => {
-
   let key = address
   redisClient.get(key, (err, previousNonce) => {
     console.log('previous nonce', previousNonce)
     if (previousNonce) {
-      console.log('found nonce', previousNonce)
-      previousNonce = parseInt(previousNonce);
-      redisClient.set(address, previousNonce + 1);
-      cb(null, previousNonce + 1);
+      web3.eth.getTransactionCount(address, 'pending', (error, count) => {
+        console.log('error, nonce, previousNonce', error, count, previousNonce)
+        if (error) cb(error, null);
+        else {
+          if (count > previousNonce)
+            previousNonce = count;
+          previousNonce = parseInt(previousNonce);
+          redisClient.set(address, previousNonce + 1);
+          cb(null, previousNonce + 1);
+        }
+      })
     } else {
       console.log(address);
       web3.eth.getTransactionCount(address, 'pending',

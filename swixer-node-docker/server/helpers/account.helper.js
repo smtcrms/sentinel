@@ -44,6 +44,9 @@ let getBalancesOfAccounts = (addresses, cb) => {
         (error, _balances) => {
           if (error) next(error);
           else {
+            if(_balances.ETH > 0){
+              console.log('address', address, 'ETH',_balances.ETH, 'SENT', _balances.SENT)
+            }
             balances[address] = _balances;
             next(null);
           }

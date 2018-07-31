@@ -41,15 +41,22 @@ let swixTransfer = (toAddress, destinationAddress, totalAmount, coinSymbol, cb) 
 
           let account = lodash.filter(accounts, item => item.address === address)[0];
           let _balances = balances[address];
+          let gas = 20e9 * 50e3;
+          if (coinSymbol === 'ETH')
+            gas = 19e9 * 50e3 * 5;
+
           if ((coinType === 'BTC' && _balances[coinSymbol] > 0) && remainingAmount > 0 ||
-            (coinType === 'ETH' && _balances.ETH > 20e9 * 50e3 && _balances[coinSymbol] > 0 && remainingAmount > 0)) {
+            (coinType === 'ETH' && _balances.ETH > gas && _balances[coinSymbol] > 0 && remainingAmount > 0)) {
             let value = Math.min(_balances[coinSymbol], remainingAmount);
+            if (coinSymbol === 'ETH') {
+              value = value - 20e9 * 50e3 * 2
+            }
             async.waterfall([
               (l2Next) => {
                 transfer(account.privateKey, destinationAddress, value, coinSymbol,
                   (error, txHash) => {
                     console.log(error, txHash);
-                    if (txHash || coinSymbol === 'PIVX'){
+                    if (txHash || coinSymbol === 'PIVX') {
                       remainingAmount -= value;
                     }
                     l2Next(null, {
