@@ -54,6 +54,9 @@ def get_swix_status(ip, swix_hash):
         if res['success']:
             return {
                 'status': res['swixStatus'],
+                'from_token': res['fromToken'],
+                'to_token': res['toToken'],
+                'destination_address': res['destAddr'],
                 'tx_infos': res['txInfos'],
                 'remaining_amount': res['remainingAmount'] if 'remainingAmount' in res else None
             }
@@ -63,6 +66,19 @@ def get_swix_status(ip, swix_hash):
         print(error)
         return None
 
+
+def get_pending_swix(ip):
+   try:
+        url = 'http://{}:3000/pending'.format(ip)
+        res = requests.get(url)
+        res = res.json()
+        if res['success']:
+            return res['result']
+        else:
+            return None
+   except Exception as error:
+        print(error)
+        return None
 
 class GetSwixStatus(object):
     def on_get(self, req, resp):
@@ -96,6 +112,9 @@ class GetSwixStatus(object):
                     message = {
                         'success': True,
                         'status': details['status'],
+                        'from_symbol': details['from_token'],
+                        'to_symbol': details['to_token'],
+                        'dest_addr': details['destination_address'],
                         'tx_infos': details['tx_infos'],
                         'remaining_amount': details['remaining_amount']
                     }
@@ -115,16 +134,43 @@ class GetSwixerNodesList(object):
         resp.status = falcon.HTTP_200
         resp.body = json.dumps(message)
 
+class GetPendingSwixsList(object):
+    def on_get(self, req, resp):
+        node_address = str(req.get_param('node'))
+        node = db.swixer_nodes.find_one({
+                'account_addr': node_address.lower(),
+                'swixer.status': 'up'
+               })
+        if node is None:
+            message = {
+                    'success': False,
+                    'message': 'No swixer node found.'
+                   }
+        else:
+            pending_list = get_pending_swix(node['ip'])
+            if pending_list is None:
+                message={
+                     'success': False,
+                     'message':'Error occured while fetching pending transactions.'
+                }
+            else:
+                message={
+                     'success': True,
+                     'list': pending_list
+                }
+        resp.status = falcon.HTTP_200
+        resp.body = json.dumps(message)
 
 class GetSwixDetails(object):
     def on_post(self, req, resp):
+        print(req.body)
         node_address = str(req.body['node_address'])
         from_symbol = str(req.body['from_symbol'])
         to_symbol = str(req.body['to_symbol'])
         client_address = str(req.body['client_address'])
         destination_address = str(req.body['destination_address'])
+        refund_address =  str(req.body['refund_address']) if 'refund_address' in req.body else client_address
         delay_in_seconds = int(req.body['delay_in_seconds'])
-        refund_address =  str(req.body['refund_address'])
         from_token = tokens.get_token(from_symbol)
         to_token = tokens.get_token(to_symbol)
         value = 1.0 * (10 ** from_token['decimals'])

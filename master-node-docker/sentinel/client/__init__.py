@@ -5,6 +5,7 @@ from .connection import UpdateConnection
 from .swixer import GetExchangeValue
 from .swixer import GetSwixDetails
 from .swixer import GetSwixStatus
+from .swixer import GetPendingSwixsList
 from .swixer import GetSwixerNodesList
 from .transactions import RawTransaction
 from .vpn import GetSocksList
