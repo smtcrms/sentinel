@@ -19,6 +19,7 @@ from sentinel.client import PayVpnUsage
 from sentinel.client import RawTransaction
 from sentinel.client import ReportPayment
 from sentinel.client import UpdateConnection
+from sentinel.client import GetPendingSwixsList
 from sentinel.dev import GetFreeAmount
 from sentinel.logs import LogTheError
 from sentinel.node import DeRegisterNode
@@ -113,6 +114,7 @@ server.add_route('/swix/rate', GetExchangeValue())
 server.add_route('/swix/list', GetSwixerNodesList())
 server.add_route('/swix/status', GetSwixStatus())
 server.add_route('/swix/register', RegisterSwixerNode())
+server.add_route('/swix/pending', GetPendingSwixsList())
 server.add_route('/swix/deregister', DeRegisterSwixerNode())
 server.add_route('/swix/update-nodeinfo', UpdateSwixerNodeInfo())
 

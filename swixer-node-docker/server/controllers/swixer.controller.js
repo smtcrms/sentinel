@@ -41,11 +41,19 @@ let getStatus = (req, res) => {
       success: !error
     }, error || success);
     let status = response.status;
-    delete(response.status);
+    delete (response.status);
     res.status(status).send(response);
   });
 };
 
+let getPendingSwixes = (req, res) => {
+  swixerDbo.getPendingSwix((error, result) => {
+    if (error) res.status(400).send({ success: false, message: 'Error in fetching transactions.' });
+    else res.status(200).send({ success: true, result: result });
+  });
+};
+
 module.exports = {
-  getStatus
+  getStatus,
+  getPendingSwixes
 };

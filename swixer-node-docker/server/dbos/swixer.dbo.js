@@ -9,15 +9,35 @@ let insertSwixDetails = (swixDetails, cb) => {
   });
 };
 
+let getPendingSwix = (cb) => {
+  SwixDetailsModel.find({
+    status: 'progress'
+  }, {
+      _id: 0,
+      fromSymbol: 1,
+      toSymbol: 1,
+      swixHash: 1,
+      fromAddress: 1,
+      toAddress: 1,
+      destinationAddress: 1,
+      remainingAmount: 1,
+      insertedOn: 1,
+      lastUpdateOn: 1
+    }, (error, result) => {
+      if (error) cb(error, null);
+      else cb(null, result || []);
+    });
+};
+
 let getSwix = (swixHash, cb) => {
   SwixDetailsModel.findOne({
     swixHash
   }, {
-    _id: 0
-  }, (error, result) => {
-    if(error) cb(error, null);
-    else cb(null, result);
-  });
+      _id: 0
+    }, (error, result) => {
+      if (error) cb(error, null);
+      else cb(null, result);
+    });
 };
 
 let getValidSwixes = (cb) => {
@@ -91,8 +111,8 @@ let updateSwixTransactionStatus = (toAddress, txInfo, remainingAmount, cb) => {
 };
 
 const updateSwix = (findObj, updateObj, cb) => {
-  SwixDetailsModel.update(findObj, { $set:updateObj }, (err, resp) => {
-    if(err) cb(err, null)
+  SwixDetailsModel.update(findObj, { $set: updateObj }, (err, resp) => {
+    if (err) cb(err, null)
     else cb(null, resp)
   })
 }
@@ -104,5 +124,6 @@ module.exports = {
   updateSwixStatus,
   increaseTries,
   updateSwixTransactionStatus,
-  updateSwix
+  updateSwix,
+  getPendingSwix
 };

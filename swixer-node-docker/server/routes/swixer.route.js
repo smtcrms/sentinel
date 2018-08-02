@@ -4,4 +4,5 @@ let swixValidation = require('../validations/swixer.validation');
 
 module.exports = (server) => {
   server.get('/status', swixValidation.getStatus, swixContoller.getStatus);
+  server.get('/pending',swixController.getPendingSwixes);
 };
