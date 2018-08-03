@@ -14,28 +14,37 @@ let getAccounts = (coinTypes, cb) => {
     'type': {
       $in: coinTypes
     }
-  },
-    {
-      '_id': 0
-    }, (error, details) => {
-      if (error) cb(error, null);
-      else cb(null, details);
-    });
+  }, {
+    '_id': 0
+  }, (error, details) => {
+    if (error) cb(error, null);
+    else cb(null, details);
+  });
 };
 
 let getAccount = (address, cb) => {
   AccountModel.findOne({
     address: address
   }, {
-      '_id': 0
-    }, (error, details) => {
-      if (error) cb(error, null);
-      else cb(null, details);
-    });
+    '_id': 0
+  }, (error, details) => {
+    if (error) cb(error, null);
+    else cb(null, details);
+  });
 };
+
+let updateAccount = (findData, updateData, cb) => {
+  AccountModel.update(findData, {
+    $set: updateData
+  }, (error, resp) => {
+    if (error) cb(error, null)
+    else cb(null, resp)
+  })
+}
 
 module.exports = {
   insertAccount,
   getAccounts,
-  getAccount
+  getAccount,
+  updateAccount
 };

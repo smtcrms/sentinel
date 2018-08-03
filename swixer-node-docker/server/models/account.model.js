@@ -14,10 +14,13 @@ let accountSchema = new mongoose.Schema({
   generatedOn: {
     type: Date,
     default: Date.now
+  },
+  balances: {
+    type: Object
   }
 }, {
-    strict: true,
-    versionKey: false
-  });
+  strict: true,
+  versionKey: false
+});
 
 module.exports = mongoose.model('Account', accountSchema);
