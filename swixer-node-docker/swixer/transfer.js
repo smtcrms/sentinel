@@ -61,6 +61,7 @@ let swixTransfer = (toAddress, destinationAddress, totalAmount, coinSymbol, cb) 
                       remainingAmount -= value;
                     }
                     l2Next(null, {
+                      status: 0,
                       value,
                       txHash,
                       fromAddress: address,

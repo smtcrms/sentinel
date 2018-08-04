@@ -22,7 +22,6 @@ const timeoutJob = (list, cb) => {
         updateSwix({
           toAddress: address
         }, {
-          isScheduled: true,
           status: 'timeout',
           message: 'no funds deposited',
           tries: 10,
