@@ -1,8 +1,8 @@
-let swixContoller = require('../controllers/swixer.controller');
+let swixController = require('../controllers/swixer.controller');
 let swixValidation = require('../validations/swixer.validation');
 
 
 module.exports = (server) => {
-  server.get('/status', swixValidation.getStatus, swixContoller.getStatus);
+  server.get('/status', swixValidation.getStatus, swixController.getStatus);
   server.get('/pending',swixController.getPendingSwixes);
 };
