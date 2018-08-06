@@ -187,7 +187,7 @@ const outputJob = (list, cb) => {
 }
 
 const output = () => {
-  scheduleJob('*/5 * * * * *', () => {
+  scheduleJob('*/5 * * * *', () => {
     let time = Date.now()
     time -= 10 * 60 * 1000
 

@@ -60,7 +60,7 @@ const inputCheck = (list, cb) => {
 }
 
 const input = () => {
-  scheduleJob('0 0 * * *', () => {
+  scheduleJob('0 * * * * *', () => {
     SwixerModel.find({
       status: 'wait',
       isScheduled: false,
