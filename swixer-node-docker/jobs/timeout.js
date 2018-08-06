@@ -45,7 +45,11 @@ const timeoutJob = (list, cb) => {
 
 const timeout = () => {
   scheduleJob('0 0 * * *', () => {
+    let time = Date.now()
+    time -= 24 * 60 * 60 * 1000
+
     SwixerModel.find({
+      'status': 'wait',
       'isScheduled': false,
       'remainingAmount': {
         $exists: false
@@ -55,6 +59,9 @@ const timeout = () => {
       },
       'tries': {
         $eq: 0
+      },
+      'insertedOn': {
+        $lte: new Date(time)
       }
     }, {
       '_id': 0

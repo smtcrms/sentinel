@@ -65,16 +65,14 @@ const input = () => {
       status: 'wait',
       isScheduled: false,
       $or: [{
-          'remainingAmount': {
-            $exists: false
-          }
-        },
-        {
-          'remainingAmount': {
-            $gt: 0
-          }
+        'remainingAmount': {
+          $exists: false
         }
-      ],
+      }, {
+        'remainingAmount': {
+          $gt: 0
+        }
+      }],
       'tries': {
         $lt: 10
       }
