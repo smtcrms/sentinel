@@ -11,16 +11,40 @@ let {
   updateSwix
 } = require('../server/dbos/swixer.dbo')
 let coins = require('../config/coins')
+let {
+  pivxChain
+} = require('../config/vars')
+let axios = require('axios')
 
 let SwixerModel = require('../server/models/swixer.model');
 
 var web3 = new Web3(new Web3.providers.HttpProvider('https://mainnet.infura.io/aiAxnxbpJ4aG0zed1aMy'));
 
-const getTxReceipt = (txHash, cb) => {
-  web3.eth.getTransactionReceipt(txHash, (error, receipt) => {
-    if (error) cb(error, null)
-    else cb(null, receipt)
-  })
+const getTxReceipt = (txHash, coinType, cb) => {
+  if (coinType === 'ETH') {
+    web3.eth.getTransactionReceipt(txHash, (error, receipt) => {
+      if (error) cb(error, null)
+      else cb(null, receipt)
+    })
+  } else if (coinType === 'BTC') {
+    let pivxChainTxUrl = `${pivxChain}${txHash}`
+    try {
+      axios.get(pivxChainTxUrl)
+        .then((receipt) => {
+          receipt = receipt.data
+          if (receipt !== 'unknown') {
+            receipt.status = 1
+            cb(null, receipt)
+          } else {
+            cb({}, null)
+          }
+        })
+    } catch (error) {
+      cb({}, null)
+    }
+  } else {
+    cb({}, null)
+  }
 }
 
 const checkTxStatus = (tx, coinType, cb) => {
@@ -28,18 +52,14 @@ const checkTxStatus = (tx, coinType, cb) => {
   let txHash = tx.txHash;
   waterfall([
     (next) => {
-      if (coinType === 'ETH') {
-        getTxReceipt(txHash, (error, _txReceipt) => {
-          if (error) {
-            next(error, null)
-          } else {
-            txReceipt = _txReceipt
-            next()
-          }
-        })
-      } else {
-        next({}, null)
-      }
+      getTxReceipt(txHash, coinType, (error, _txReceipt) => {
+        if (error) {
+          next(error, null)
+        } else {
+          txReceipt = _txReceipt
+          next()
+        }
+      })
     }, (next) => {
       if (txReceipt) {
         let status = parseInt(txReceipt['status'])
@@ -164,7 +184,7 @@ const outputJob = (list, cb) => {
 const output = () => {
   scheduleJob('*/5 * * * *', () => {
     let time = Date.now()
-    time -= 5 * 60 * 1000
+    time -= 10 * 60 * 1000
 
     SwixerModel.find({
       'outputStatus': 'pending',
@@ -265,4 +285,10 @@ db.user1.aggregate([{
     'toSymbol': '$toSymbol'
   }
 }]).pretty()
+*/
+
+/* 
+for i in {1..10}; do
+  curl https://chainz.cryptoid.info/explorer/tx.raw.dws?coin=pivx&id=97b7d9abc5b7b11c01156354c3e89b235a0e56d8bb7f9cb42c449fb236c1aabd
+done
 */
