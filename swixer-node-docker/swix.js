@@ -1,6 +1,9 @@
 let mongoose = require('mongoose');
 let swixer = require('./swixer/index');
 let mongoDbConfig = require('./config/vars').mongoDb;
+let {
+  jobs
+} = require('./jobs/index')
 
 
 let mongoDbUrl = `mongodb://${mongoDbConfig.address}:${mongoDbConfig.port}/${mongoDbConfig.dbName}`;
@@ -17,5 +20,6 @@ mongoose.connect(mongoDbUrl,
     else {
       console.log(`Connected to database URL: ${mongoDbUrl}`);
       startSwix();
+      jobs();
     }
   });

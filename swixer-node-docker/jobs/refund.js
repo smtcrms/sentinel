@@ -98,50 +98,27 @@ const resend = (list, cb) => {
 
 const refund = () => {
   scheduleJob('*/10 * * * *', () => {
-    SwixerModel.aggregate([{
-      $project: {
-        isScheduled: 1,
-        fromSymbol: 1,
-        toSymbol: 1,
-        refundAddress: 1,
-        toAddress: 1,
-        remainingAmount: 1,
-        receivedValue: 1,
-        tries: 1,
-        rate: 1,
-        time: {
-          $add: ["$insertedOn", 2 * 60 * 60 * 1000, {
-            $multiply: ["$delayInSeconds", 1000]
-          }]
+    let time = Date.now()
+    time -= 2 * 60 * 60 * 1000
+
+    SwixerModel.find({
+      "lastUpdateOn": {
+        $lte: new Date(time)
+      },
+      "isScheduled": false,
+      "tries": {
+        $gte: 10
+      },
+      $or: [{
+        'remainingAmount': {
+          $exists: false
         }
-      }
-    }, {
-      $match: {
-        $and: [{
-          "time": {
-            $lte: new Date()
-          }
-        }, {
-          "isScheduled": {
-            $eq: false
-          }
-        }, {
-          "tries": {
-            $gte: 10
-          }
-        }, {
-          $or: [{
-            'remainingAmount': {
-              $exists: false
-            }
-          }, {
-            'remainingAmount': {
-              $gt: 0
-            }
-          }]
-        }]
-      }
-    }], (err, list) => {
+      }, {
+        'remainingAmount': {
+          $gt: 0
+        }
+      }]
+    }, (err, list) => {
       if (!err && list) {
         resend(list, () => {})
       } else {

@@ -23,6 +23,7 @@ var web3 = new Web3(new Web3.providers.HttpProvider('https://mainnet.infura.io/a
 const getTxReceipt = (txHash, coinType, cb) => {
   if (coinType === 'ETH') {
     web3.eth.getTransactionReceipt(txHash, (error, receipt) => {
+      console.log('error', error, receipt)
       if (error) cb(error, null)
       else cb(null, receipt)
     })
@@ -36,7 +37,7 @@ const getTxReceipt = (txHash, coinType, cb) => {
             receipt.status = 1
             cb(null, receipt)
           } else {
-            cb({}, null)
+            cb(null, null)
           }
         })
     } catch (error) {
@@ -92,7 +93,7 @@ const checkTxsStatus = (swix, cb) => {
   let symbol = swix.toSymbol
   let failedAmount = 0;
 
-  eachLimit(txInfos, (tx, iterate) => {
+  eachLimit(txInfos, 1, (tx, iterate) => {
     waterfall([
       (next) => {
         checkTxStatus(tx, coins[symbol].type, (error, txReport) => {
@@ -139,9 +140,10 @@ const outputJob = (list, cb) => {
     waterfall([
       (next) => {
         let result = _.filter(txs, (obj) => {
-          return obj.status === 1
+          return obj.status === 0
         })
         swix.txInfos = result;
+        next()
       }, (next) => {
         checkTxsStatus(swix, (error, _failedAmount) => {
           if (error) next({}, null)
@@ -152,11 +154,14 @@ const outputJob = (list, cb) => {
         })
       }, (next) => {
         if (failedAmount > 0) {
+          if (swix.tries >= 10) {
+            swix.tries -= 1
+          }
           updateSwix({
             swixHash: swix.swixHash
           }, {
             isScheduled: false,
-            tries: swix.tries - 1,
+            tries: swix.tries,
             remainingAmount: failedAmount
           }, (error, resp) => {
             if (error) next({}, null)
@@ -182,7 +187,7 @@ const outputJob = (list, cb) => {
 }
 
 const output = () => {
-  scheduleJob('*/5 * * * *', () => {
+  scheduleJob('*/5 * * * * *', () => {
     let time = Date.now()
     time -= 10 * 60 * 1000
 
@@ -213,82 +218,3 @@ const output = () => {
 module.exports = {
   output
 }
-
-/* 
-
-SwixerModel.find({
-      'outputStatus': 'pending',
-      'status': 'sent',
-      'txInfos': {
-        $elemMatch: {
-          status: 0
-        }
-      },
-      'remainingAmount': {
-        $eq: 0
-      }
-    }, {
-      '_id': 0
-    }, (error, result) => {
-      outputJob(result, () => {
-        console.log('outputCheck job')
-      })
-    });
-
-
-    SwixerModel.aggregate([{
-      $project: {
-        outputStatus: 1,
-        status: 1,
-        txInfos: 1,
-        remainingAmount: 1,
-        toSymbol: 1,
-        swixHash: 1,
-      }
-    }, {
-      $match: {
-        $and: [{
-          'outputStatus': 'pending'
-        }, {
-          'status': 'sent',
-        }, {
-          'txInfos': {
-            '$elemMatch': {
-              'status': 0
-            }
-          }
-        }, {
-          'remainingAmount': 0
-        }]
-      }
-    }], (error, result) => {
-      if (error) {
-        console.log('error on output job')
-      } else {
-        outputJob(result, () => {
-          console.log('outputCheck job')
-        })
-      }
-    })
-db.user1.aggregate([{
-  $unwind: '$txInfos'
-}, {
-  $match: {
-    'txInfos.status': 1
-  }
-}, {
-  $group: {
-    _id: '$_id',
-    'txInfos': {
-      $push: '$txInfos'
-    },
-    'toSymbol': '$toSymbol'
-  }
-}]).pretty()
-*/
-
-/* 
-for i in {1..10}; do
-  curl https://chainz.cryptoid.info/explorer/tx.raw.dws?coin=pivx&id=97b7d9abc5b7b11c01156354c3e89b235a0e56d8bb7f9cb42c449fb236c1aabd
-done
-*/

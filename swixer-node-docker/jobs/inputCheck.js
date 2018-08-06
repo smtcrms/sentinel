@@ -6,9 +6,6 @@ let {
   eachLimit
 } = require('async');
 let {
-  getBalance
-} = require('../factories/accounts');
-let {
   updateSwix
 } = require('../server/dbos/swixer.dbo')
 let SwixerModel = require('../server/models/swixer.model');
@@ -35,21 +32,24 @@ const inputCheck = (list, cb) => {
           }
         })
       }, (next) => {
-
-        updateSwix({
-          toAddress: address
-        }, {
-          status: 'gotFunds',
-          receivedValue: balance,
-          receivedTime: Date.now()
-        }, (err, resp) => {
-          if (err) {
-            console.log('error at updating swix status in resend job');
-            next({}, null)
-          } else {
-            next()
-          }
-        })
+        if (balance > 0) {
+          updateSwix({
+            toAddress: address
+          }, {
+            status: 'gotFunds',
+            receivedValue: balance,
+            receivedTime: Date.now()
+          }, (err, resp) => {
+            if (err) {
+              console.log('error at updating swix status in resend job');
+              next({}, null)
+            } else {
+              next()
+            }
+          })
+        } else {
+          next()
+        }
       }
     ], (err, resp) => {
       iterate();
@@ -89,3 +89,23 @@ const input = () => {
 module.exports = {
   input
 }
+
+/* let a = {
+  "_id": ObjectId("5b5997de0ef787c3fdee2357"),
+  "tries": 0,
+  "isScheduled": false,
+  "status": "wait",
+  "message": "Swix is complete.",
+  "txInfos": [],
+  "fromSymbol": "SENT",
+  "toSymbol": "PIVX",
+  "clientAddress": "0x47bd80a152d0d77664d65de5789df575c9cabbdb",
+  "destinationAddress": "DQvWbq96oxPH1tkKrscXFaRkxsMBZwoEx8",
+  "delayInSeconds": 60,
+  "rate": 0.0038829435635694266,
+  "refundAddress": "0x47bd80a152d0d77664d65de5789df575c9cabbdb",
+  "toAddress": "0x178fbac45338a185f9d1340f73bab200592bb67d",
+  "swixHash": "4d430453aee15fb889b13e6163e43272",
+  "insertedOn": new Date(),
+  "lastUpdateOn": new Date(),
+} */
