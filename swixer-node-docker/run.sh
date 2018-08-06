@@ -1,3 +1,2 @@
-node server &
 node swix
 

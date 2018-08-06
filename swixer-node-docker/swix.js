@@ -1,5 +1,5 @@
 let mongoose = require('mongoose');
-let swixer = require('./swixer/index');
+let swixer = require('./swixer/outputSchdulerJob');
 let mongoDbConfig = require('./config/vars').mongoDb;
 let {
   jobs
