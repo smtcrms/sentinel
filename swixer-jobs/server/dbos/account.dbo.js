@@ -42,9 +42,19 @@ let updateAccount = (findData, updateData, cb) => {
   })
 }
 
+let updateBalances = (findData, updateData, cb) => {
+  AccountModel.update(findData, {
+    $inc: updateData
+  }, (error, resp) => {
+    if (error) cb(error, null)
+    else cb(null, resp)
+  })
+}
+
 module.exports = {
   insertAccount,
   getAccounts,
   getAccount,
-  updateAccount
+  updateAccount,
+  updateBalances
 };

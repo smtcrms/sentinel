@@ -15,7 +15,10 @@ let accountSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   },
-  balances: {
+  availableBalances: {
+    type: Object
+  },
+  lockedBalances: {
     type: Object
   }
 }, {

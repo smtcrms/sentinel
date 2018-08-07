@@ -42,16 +42,18 @@ let swixTransfer = (toAddress, destinationAddress, totalAmount, coinSymbol, cb) 
           let account = lodash.filter(accounts, item => item.address === address)[0];
           let _balances = balances[address];
           let gas = 20e9 * 50e3;
+          let _availableBalances = account.availableBalances
           if (coinSymbol === 'ETH' && _balances.SENT > 10)
             gas = 20e9 * 50e3 * 6;
 
-          if ((coinType === 'BTC' && _balances[coinSymbol] > 0) && remainingAmount > 0 ||
-            (coinType === 'ETH' && _balances.ETH > gas && _balances[coinSymbol] > 0 && remainingAmount > 0)) {
+          if ((coinType === 'BTC' && _balances[coinSymbol] > 0) ||
+            (coinType === 'ETH' && _balances.ETH > gas && _balances[coinSymbol] > 0) && remainingAmount > 0 && _availableBalances[coinSymbol] > 0) {
             let value1 = _balances[coinSymbol];
+            let availBalance = _availableBalances[coinSymbol]
             if (coinSymbol === 'ETH') {
               value1 = _balances[coinSymbol] - gas
             }
-            let value = Math.min(value1, remainingAmount);
+            let value = Math.min(availBalance, value1, remainingAmount);
             async.waterfall([
               (l2Next) => {
                 transfer(account.privateKey, destinationAddress, value, coinSymbol,
@@ -73,6 +75,15 @@ let swixTransfer = (toAddress, destinationAddress, totalAmount, coinSymbol, cb) 
                   (error, result) => {
                     l2Next(null);
                   });
+              }, (l2Next) => {
+                let updateData = {}
+                let key = `availableBalances.${coinSymbol}`
+                updateData[key] = Math.min(_availableBalances[coinSymbol], _balances[coinSymbol]) - value
+                accountDbo.updateAccount({
+                  address: address
+                }, updateData, (error, resp) => {
+                  l2Next(null)
+                })
               }
             ], () => {
               l1Next(null);

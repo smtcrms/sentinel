@@ -9,7 +9,8 @@ let {
   getBalance
 } = require('../factories/accounts');
 let {
-  getAccount
+  getAccount,
+  updateBalances
 } = require('../server/dbos/account.dbo');
 let {
   transfer
@@ -77,6 +78,23 @@ const resend = (list, cb) => {
           }
         })
       }, (next) => {
+        let keyLocked = `lockedBalances.${item.fromSymbol}`
+        let keyAvailable = `availableBalances.${item.fromSymbol}`
+        let findData = {
+          address: item.toAddress
+        }
+        let updateData = {}
+        updateData[keyLocked] = -item.receivedValue
+        updateData[keyAvailable] = item.receivedValue - refundingBalance
+        updateBalances(findData, updateData, (error, resp) => {
+          if (error) {
+            console.log('error at updateBalnces in resend job')
+            next({}, null)
+          } else {
+            next()
+          }
+        })
+      }, (next) => {
         let privateKey = accountDetails.privateKey;
         transfer(privateKey, refundAddress, refundingBalance, fromSymbol, (err, resp) => {
           if (err) {
@@ -86,7 +104,6 @@ const resend = (list, cb) => {
             next()
           }
         })
-        next()
       }
     ], (err, resp) => {
       iterate();

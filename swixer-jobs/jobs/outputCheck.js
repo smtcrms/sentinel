@@ -1,3 +1,5 @@
+let axios = require('axios')
+var Web3 = require('web3');
 let {
   scheduleJob
 } = require('node-schedule');
@@ -6,7 +8,6 @@ let {
   waterfall,
   eachLimit
 } = require('async');
-var Web3 = require('web3');
 let {
   updateSwix
 } = require('../server/dbos/swixer.dbo')
@@ -14,7 +15,9 @@ let coins = require('../config/coins')
 let {
   pivxChain
 } = require('../config/vars')
-let axios = require('axios')
+let {
+  updateBalances
+} = require('../server/dbos/account.dbo')
 
 let SwixerModel = require('../server/models/swixer.model');
 
@@ -119,7 +122,21 @@ const checkTxsStatus = (swix, cb) => {
           'txInfos.$.status': txStatus.status
         }, (error, resp) => {
           if (error) next({}, null)
-          else next(null)
+          else {
+            let balance = swix.receivedValue;
+            let keyAvailable = `availableBalances.${swix.fromSymbol}`
+            let keyLocked = `lockedBalances.${swix.fromSymbol}`
+            let findData = {
+              toAddress: swix.toAddress
+            }
+            let updateData = {}
+            updateData[keyAvailable] = balance
+            updateData[keyLocked] = -balance
+            updateBalances(findData, updateData, (error, resp) => {
+              if (error) next({}, null)
+              else next(null)
+            })
+          }
         })
       }
     ], (error, resp) => {

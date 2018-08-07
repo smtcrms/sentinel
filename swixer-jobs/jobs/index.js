@@ -22,7 +22,7 @@ const jobs = () => {
   timeout()
   input()
   output()
-  // balance()
+  balance()
   // refund()
 }
 

@@ -8,15 +8,18 @@ let {
 let {
   getBalancesOfAccount
 } = require('../server/helpers/account.helper')
-let {
-  updateAccount
-} = require('../server/dbos/account.dbo')
+let accountDbo = require('../server/dbos/account.dbo')
 
 let coins = ['ETH', 'BTC']
 
-const balanceUpdate = (addresses, cb) => {
-  eachLimit(addresses, 1, (address, iterate) => {
+const balanceUpdate = (accounts, cb) => {
+  eachLimit(accounts, 1, (account, iterate) => {
+    account = account.toObject()
+    let address = account.address;
     let balances = null
+    console.log('accounts', account)
+    let hasLocked = 'lockedBalances' in account ? true : false
+    console.log('haslocked', hasLocked)
     waterfall([
       (next) => {
         getBalancesOfAccount(address, (error, _balances) => {
@@ -28,10 +31,19 @@ const balanceUpdate = (addresses, cb) => {
           }
         })
       }, (next) => {
-        updateAccount({
+        if (hasLocked) {
+          let lockedBalances = account['lockedBalances']
+          console.log('locked', lockedBalances)
+          let keys = Object.keys(lockedBalances);
+          keys.map((key) => {
+            balances[key] -= lockedBalances[key]
+          })
+        }
+        console.log('balances', balances)
+        accountDbo.updateAccount({
           address: address
         }, {
-          balances: balances
+          availableBalances: balances
         }, (error, resp) => {
           if (error) next({}, null)
           else next()
@@ -46,13 +58,12 @@ const balanceUpdate = (addresses, cb) => {
 }
 
 const balance = () => {
-  scheduleJob('0 0 * * *', () => {
+  scheduleJob('0 */6 * * *', () => {
     accountDbo.getAccounts(coins, (error, accounts) => {
       if (error) {
         console.log('error in getting accounts')
       } else {
-        addresses = lodash.map(accounts, 'address');
-        balanceUpdate(addresses, () => {
+        balanceUpdate(accounts, () => {
           console.log('balanca update job')
         })
       }

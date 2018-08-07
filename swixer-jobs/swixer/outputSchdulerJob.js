@@ -72,23 +72,27 @@ let start = (cb) => {
                       } else l3Next(null)
                     }, (l3Next) => {
                       if (!receivedVal) {
+                        let lockedBalances = `lockedBalances.${swix.fromSymbol}`
+                        let updateData = {
+                          'receivedTime': receivedTime,
+                          'receivedValue': receivedVal,
+                          'status': 'gotFunds'
+                        }
+                        updateData[lockedBalances] = receivedVal
                         swixerDbo.updateSwix({
-                          swixHash: swix.swixHash
-                        }, {
-                          receivedTime: Date.now(),
-                          receivedValue: amount,
-                          status: 'gotFunds'
-                        }, (error, resp) => {
-                          if (error) {
-                            l3Next({
-                              status: 4001,
-                              message: 'Error occurred while getting updating swix.'
-                            });
-                          } else {
-                            amount = (amount * swix.rate) * Math.pow(10, decimals[toSymbol]) / (Math.pow(10, decimals[fromSymbol]))
-                            l3Next(null, amount);
-                          }
-                        })
+                            swixHash: swix.swixHash
+                          }, updateData,
+                          (error, resp) => {
+                            if (error) {
+                              l3Next({
+                                status: 4001,
+                                message: 'Error occurred while getting updating swix.'
+                              });
+                            } else {
+                              amount = (amount * swix.rate) * Math.pow(10, decimals[toSymbol]) / (Math.pow(10, decimals[fromSymbol]))
+                              l3Next(null, amount);
+                            }
+                          })
                       } else {
                         amount = (amount * swix.rate) * Math.pow(10, decimals[toSymbol]) / (Math.pow(10, decimals[fromSymbol]))
                         l3Next(null, amount);
