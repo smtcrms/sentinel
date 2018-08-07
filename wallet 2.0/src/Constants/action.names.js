@@ -5,4 +5,6 @@ export const TESTNET = 'TESTNET';
 export const GETACCOUNT = 'GETACCOUNT';
 export const GETETHBAL = 'GETETHBAL';
 export const GETSENTBAL = 'GETSENTBAL';
-export const CURRENTTAB= 'CURRENTTAB';
+export const CURRENTTAB = 'CURRENTTAB';
+export const SENT_TEST_HISTORY = 'SENT_TEST_HISTORY';
+export const ETH_TEST_HISTORY = 'SENT_TEST_HISTORY';

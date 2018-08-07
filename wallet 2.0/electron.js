@@ -14,6 +14,7 @@ var showPrompt = true;
 var vpnType = 'openvpn';
 const SENT_DIR = getUserHome() + '/.sentinel';
 const CONFIG_FILE = SENT_DIR + '/config';
+
 if (!fs.existsSync(SENT_DIR)) fs.mkdirSync(SENT_DIR);
 function getUserHome() {
   return process.env[(process.platform === 'win32') ? 'USERPROFILE' : 'HOME'];
@@ -79,12 +80,12 @@ function getConfig(cb) {
 function isVPNConnected(cb) {
   if (process.platform === 'win32') {
     try {
-      let stdout = execSync('tasklist /v /fo csv | findstr /i "openvpn.exe"')
+      let stdout = execSync('tasklist /v /fo csv | findstr /i "openvpn.exe"');
       if (stdout) {
         cb(true)
       }
       else {
-        let stdOutput = execSync('tasklist /v /fo csv | findstr /i "Shadowsocks.exe"')
+        let stdOutput = execSync('tasklist /v /fo csv | findstr /i "Shadowsocks.exe"');
         if (stdOutput) {
           vpnType = 'socks5';
           cb(true)

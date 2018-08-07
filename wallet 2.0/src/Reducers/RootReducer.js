@@ -3,6 +3,7 @@ import { setLanguage, createAccount, setComponent } from './beforeAuth.reducer';
 import { setTestNet, getETHBalance, getSentBalance } from './header.reducer';
 import { setCurrentTab } from './sidebar.reducer';
 import { getAccount } from './dashboard.reducer';
+import { testSENTHistory, testETHHistory } from './txnHistoryReducer'
 
 const rootReducer = combineReducers({
     setLanguage,
@@ -12,7 +13,9 @@ const rootReducer = combineReducers({
     getAccount,
     getETHBalance,
     getSentBalance,
-    setCurrentTab
+    setCurrentTab,
+    testSENTHistory,
+    testETHHistory
 });
 
 export default rootReducer;
