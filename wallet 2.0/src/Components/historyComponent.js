@@ -37,4 +37,4 @@ const styles = {
         fontWeight: 'normal',
         fontSize: 13
     }
-}
+};
