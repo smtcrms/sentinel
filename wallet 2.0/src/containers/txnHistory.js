@@ -6,13 +6,25 @@ import { bindActionCreators } from 'redux';
 import { testSENTTxns, testETHTxns } from '../Actions/getHistoryAction'
 import { label, buttonStyle, disabledButton } from '../Assets/commonStyles'
 import History from "../Components/historyComponent";
+import CustomButton from '../Components/customButton'
+import {setTestNet} from "../Reducers/header.reducer";
 
 class TxnHistory extends Component {
 
+    constructor(props){
+        super(props);
+
+        this.state = {
+            isActive: false,
+        }
+    }
 
     testSentHistory = () => {
+
+        this.setState({ isActive: false });
         let data = {
-          account_addr: this.props.getAccount
+            account_addr: this.props.getAccount,
+            isTest: this.props.setTestNet
         };
       this.props.testSENTTxns(data)
           .then(res => { console.log('here we are: ', res) })
@@ -21,9 +33,12 @@ class TxnHistory extends Component {
     };
 
     testEthHistory = () => {
+        this.setState({ isActive: true });
+
         let data = {
             page: 1,
-            account_addr: this.props.getAccount
+            account_addr: this.props.getAccount,
+            isTest: this.props.setTestNet
         };
         this.props.testETHTxns(data)
             .then(res => { console.log('here we are: ', res) })
@@ -31,7 +46,7 @@ class TxnHistory extends Component {
     };
 
     render() {
-    console.log(this.props.testETHHistory, "test hostory");
+    console.log(this.props.setTestNet, "test hostory");
         let txns;
         if (this.props.testETHHistory) {
             txns = this.props.testETHHistory.data.result.map(data => {
@@ -50,20 +65,16 @@ class TxnHistory extends Component {
                         <label style={label} >ETH Transactions</label>
                     </div>
                     <div style={{ display: 'flex' }}>
-                        <div>
+                        <div style={ styles.margin } >
                             <IconButton aria-label="Refresh">
                                 <RefreshIcon/>
                             </IconButton>
                         </div>
-                        <div>
-                            <Button variant="flat" component="span" style={buttonStyle}>
-                                SENT
-                            </Button>
+                        <div style={ styles.margin }>
+                            <CustomButton color={'#FFFFFF'}  label={'SENT'} active={!this.state.isActive} onClick={this.testSentHistory} />
                         </div>
-                        <div>
-                            <Button onClick={this.testEthHistory} variant="raised" component="span" style={buttonStyle}>
-                                ETH
-                            </Button>
+                        <div style={ styles.margin }>
+                            <CustomButton color={'#F2F2F2'} label={'ETH'} active={this.state.isActive} onClick={this.testEthHistory}/>
                         </div>
                     </div>
                 </div>
@@ -79,14 +90,21 @@ class TxnHistory extends Component {
 }
 
 
+const styles = {
+    margin: {
+        marginLeft: 10,
+        marginRight: 10,
+    }
+};
+
 const mapDispatchToProps = (dispatch) => {
 
     return bindActionCreators({ testSENTTxns, testETHTxns }, dispatch)
 };
 
-const mapStateToProps = ( { testSENTHistory, testETHHistory, getAccount } ) => {
+const mapStateToProps = ( { testSENTHistory, testETHHistory, getAccount, setTestNet } ) => {
 
-    return { testSENTHistory, testETHHistory, getAccount }
+    return { testSENTHistory, testETHHistory, getAccount, setTestNet }
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(TxnHistory);

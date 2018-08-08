@@ -5,8 +5,13 @@ import axios from 'axios';
 
 export function testSENTTxns(data) {
 
-    console.log('inside action: ', data);
-    let uri = `${config.test.sentTransUrl1}${data.account_addr}&topic1_2_opr=or&topic2=${data.account_addr}`;
+    let uri = ``;
+
+    if (data.isTest) {
+        uri = `${config.test.sentTransUrl1}${data.account_addr}&topic1_2_opr=or&topic2=${data.account_addr}`;
+    } else {
+        uri = `${config.main.sentTransUrl1}${data.account_addr}&topic1_2_opr=or&topic2=${data.account_addr}`;
+    }
     const request = axios.get(uri);
 
     return {
@@ -17,7 +22,14 @@ export function testSENTTxns(data) {
 
 export function testETHTxns(data) {
 
-    const request = axios.get(`${config.test.ethTransUrl}${data.account_addr}&page=${data.page}&offset=10&sort=desc`);
+    let uri = ``;
+
+    if (data.isTest) {
+        uri = `${config.test.ethTransUrl}${data.account_addr}&page=${data.page}&offset=10&sort=desc`
+    } else {
+        uri = `${config.main.ethTransUrl}${data.account_addr}&page=${data.page}&offset=10&sort=desc`
+    }
+    const request = axios.get(uri);
 
     return {
         payload: request,
