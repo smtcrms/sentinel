@@ -22,7 +22,7 @@ let transfer = (fromPrivateKey, toAddress, value, coinSymbol, cb) => {
       try {
         let rawTx = {
           nonce,
-          gasPrice: web3.toHex(10*1e9), //'0x9502F9000', // '0x4E3B29200', // '0x04a817c800', //web3.eth.gasPrice
+          gasPrice: web3.toHex(20*1e9), //'0x9502F9000', // '0x4E3B29200', // '0x04a817c800', //web3.eth.gasPrice
           gasLimit: web3.toHex(60*1e3),
           to: coinSymbol === 'ETH' ? toAddress : tokens[coinSymbol].address,
           value: coinSymbol === 'ETH' ? web3.toHex(value) : '0x',
