@@ -25,9 +25,9 @@ export function testETHTxns(data) {
     let uri = ``;
 
     if (data.isTest) {
-        uri = `${config.test.ethTransUrl}${data.account_addr}&page=${data.page}&offset=10&sort=desc`
+        uri = `${config.test.ethTransUrl}${data.account_addr}&sort=desc`
     } else {
-        uri = `${config.main.ethTransUrl}${data.account_addr}&page=${data.page}&offset=10&sort=desc`
+        uri = `${config.main.ethTransUrl}${data.account_addr}&sort=desc`
     }
     const request = axios.get(uri);
 

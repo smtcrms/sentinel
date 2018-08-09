@@ -10,6 +10,11 @@ const fs = require('fs');
 var disconnect = {
   name: 'DisconnectOpenVPN'
 };
+
+if (process.env.ELECTRON_START_URL) {
+  require('electron-reload')(__dirname)
+}
+
 var showPrompt = true;
 var vpnType = 'openvpn';
 const SENT_DIR = getUserHome() + '/.sentinel';

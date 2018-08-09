@@ -7,7 +7,6 @@ import { testSENTTxns, testETHTxns } from '../Actions/getHistoryAction'
 import { label, buttonStyle, disabledButton } from '../Assets/commonStyles'
 import History from "../Components/historyComponent";
 import CustomButton from '../Components/customButton'
-import {setTestNet} from "../Reducers/header.reducer";
 
 class TxnHistory extends Component {
 
@@ -27,8 +26,8 @@ class TxnHistory extends Component {
             isTest: this.props.setTestNet
         };
       this.props.testSENTTxns(data)
-          .then(res => { console.log('here we are: ', res) })
-          .catch(err => { console.log('error brah', err) });
+        // .then(res => { console.log('res', res) })
+        // .catch(err => { console.log('err', err) });
 
     };
 
@@ -36,52 +35,67 @@ class TxnHistory extends Component {
         this.setState({ isActive: true });
 
         let data = {
-            page: 1,
             account_addr: this.props.getAccount,
             isTest: this.props.setTestNet
         };
         this.props.testETHTxns(data)
-            .then(res => { console.log('here we are: ', res) })
-            .catch(err => { console.log('error brah', err) });
+            // .then(res => { console.log('res', res) })
+            // .catch(err => { console.log('err', err) });
     };
 
     render() {
-    console.log(this.props.setTestNet, "test hostory");
-        let txns;
+        let ethTxns;
+        let sentTxns;
+
         if (this.props.testETHHistory) {
-            txns = this.props.testETHHistory.data.result.map(data => {
-                console.log(data, "the data");
+            ethTxns = this.props.testETHHistory.data.result.map(data => {
+                // console.log(data, 'see this');
                 return (
-                    <div style={{ marginTop: 20, marginBottom: 20 }} >
-                        <History date={new Date().toISOString()} to={data.to} gas={data.gas} amount={data.value} status={'success'} tx={data.hash} />
+                    <div style={{ marginTop: 20, marginBottom: 20 }}>
+                        <History ownWallet={this.props.getAccount} date={new Date().toISOString()} to={data.to}
+                                 gas={data.gas} from={data.from} amount={data.value} status={'success'} tx={data.hash} />
                     </div>
                 )
         })
+        }
+
+        if (this.props.testSENTHistory) {
+            sentTxns = this.props.testSENTHistory.data.result.map(data => {
+                console.log(data, 'right here');
+                return (
+                    <div style={{ marginTop: 20, marginBottom: 20 }}>
+                        <History ownWallet={this.props.getAccount} date={new Date().toISOString()} to={data.to}
+                                 from={data.to} gas={data.gas} amount={data.value} status={'success'} tx={data.hash} />
+                    </div>
+                )
+            })
         }
         return (
             <div style={{ margin: 10 }} >
                 <div style={{ display: 'flex', justifyContent: 'space-between' }} >
                     <div>
-                        <label style={label} >ETH Transactions</label>
+                        <label style={label} >{ !this.state.isActive ? "SENT" : "ETH"} Transactions</label>
                     </div>
                     <div style={{ display: 'flex' }}>
-                        <div style={ styles.margin } >
-                            <IconButton aria-label="Refresh">
-                                <RefreshIcon/>
+                        <div style={ styles.margin }>
+                            <IconButton style={{ outline: 'none' }} aria-label="Refresh">
+                                <RefreshIcon style={{ outline: 'none' }}/>
                             </IconButton>
                         </div>
                         <div style={ styles.margin }>
-                            <CustomButton color={'#FFFFFF'}  label={'SENT'} active={!this.state.isActive} onClick={this.testSentHistory} />
+                            <CustomButton color={'#FFFFFF'}  label={'SENT'} active={!this.state.isActive}
+                                          onClick={this.testSentHistory} />
                         </div>
                         <div style={ styles.margin }>
-                            <CustomButton color={'#F2F2F2'} label={'ETH'} active={this.state.isActive} onClick={this.testEthHistory}/>
+                            <CustomButton color={'#F2F2F2'} label={'ETH'} active={this.state.isActive}
+                                          onClick={this.testEthHistory}/>
                         </div>
                     </div>
                 </div>
-                <div style={{ overflowY: 'auto', height: 400 }} >
+                <div style={styles.historyContainer} >
                     {
-                        this.props.testETHHistory ?
-                            txns : 'No Transactions yet'
+                        this.props.testETHHistory && this.props.testETHHistory.data.result.length > 0 ?
+                            !this.state.isActive ? sentTxns : ethTxns : <div>No Transactions yet</div>
                     }
                 </div>
             </div>
@@ -94,6 +108,16 @@ const styles = {
     margin: {
         marginLeft: 10,
         marginRight: 10,
+    },
+    historyContainer: {
+        overflowY: 'auto',
+        height: 450,
+        flexDirection: 'column',
+        paddingTop: 320,
+        marginTop: 20,
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center'
     }
 };
 

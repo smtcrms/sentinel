@@ -27,7 +27,7 @@ export  const historyLabel = {
 
 export const historyValue = {
     color: '#989898',
-    fontFamily: 'Montserrat, Regular',
-    fontWeight: 'normal',
+    fontFamily: 'Montserrat',
+    fontWeight: '500',
     fontSize: 13
 };

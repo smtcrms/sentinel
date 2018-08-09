@@ -1,22 +1,24 @@
 import React  from 'react';
 import { historyLabel, historyValue } from '../Assets/commonStyles'
-export default  History = ({ date, to, gas, amount, status, tx }) => {
+export default  History = ({ date, to, from, gas, amount, status, tx, ownWallet }) => {
+    console.log('from: ', from);
     return (
         <div>
             <div>
                 <div>
-                <label style={styles.outStyle}>OUT: <span style={historyValue}>
-                    {new Date(parseInt(date) * 1000).toGMTString()}</span>
-                </label>
+                    <label style={ to === ownWallet ? styles.inStyle : styles.outStyle}>{ to === ownWallet ? 'IN' : 'OUT' }&nbsp;
+                        <span style={historyValue}>{new Date(parseInt(date) * 1000).toGMTString()}</span>
+                    </label>
                 </div>
                 <div>
-                    <label style={historyLabel} >To: <span style={styles.recepientStyle}>{to}</span></label>
-                    <label style={historyLabel}>Gas Price: <span style={historyValue}>{gas} GWEI</span></label>
+                    <label style={historyLabel} >{ to === ownWallet ? 'From:' : 'To:'}&nbsp;
+                        <span style={styles.recepientStyle}>{ to === ownWallet ? from : to}</span></label>
+                    <label style={historyLabel}>Gas Price:&nbsp;<span style={historyValue}>{gas} GWEI</span></label>
                 </div>
                 <div>
-                    <label style={historyLabel}>Amount: <span style={historyValue}>{amount}</span></label>
-                    <label style={historyLabel}>Status: <span style={historyValue}>{status}</span></label>
-                    <label style={historyLabel}>Tx: <span style={historyValue}>{tx}</span></label>
+                    <label style={historyLabel}>Amount:&nbsp;<span style={historyValue}>{amount / Math.pow(10,9) }</span></label>
+                    <label style={historyLabel}>Status:&nbsp;<span style={historyValue}>{status}</span></label>
+                    <label style={historyLabel}>Tx:&nbsp;<span style={historyValue}>{tx}</span></label>
 
                 </div>
             </div>
@@ -29,7 +31,15 @@ const styles = {
         color: 'red',
         fontFamily: 'Montserrat, Medium',
         fontSize: 15,
-        paddingRight: 10
+        paddingRight: 10,
+        fontWeight: '700'
+    },
+    inStyle: {
+        color: 'green',
+        fontFamily: 'Montserrat, Medium',
+        fontSize: 15,
+        paddingRight: 10,
+        fontWeight: '700'
     },
     recepientStyle: {
         color: '#318EDE',
