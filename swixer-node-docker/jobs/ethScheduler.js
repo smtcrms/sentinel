@@ -40,7 +40,7 @@ let gasFee = () => {
           (address, l1Next) => {
             let account = lodash.filter(accounts, item => item.address === address)[0];
             let _balances = balances[address];
-            if ((_balances.SENT > 0 || _balances.BNB > 0) && _balances.ETH < 1 * 20e9 * 50e3) {
+            if ((_balances.SENT > 0 || _balances.BNB > 0) && _balances.ETH < 1 * 41e9 * 50e3) {
               sendGasPrice(address, (error, txHash) => {
                 if (txHash) {
                   l1Next(null, txHash)
