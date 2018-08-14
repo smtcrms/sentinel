@@ -48,7 +48,7 @@ const resend = (list, cb) => {
           let amount = item.remainingAmount
           let fromDecimals = Math.pow(10, decimals[fromSymbol]);
           let toDecimals = Math.pow(10, decimals[toSymbol])
-          amount = ((amount / toDecimals) * fromDecimals) / rate
+          amount = ((amount / toDecimals) * fromDecimals) / rate //check rate 
           refundingBalance = amount
           next()
         }
@@ -71,7 +71,7 @@ const resend = (list, cb) => {
           message: 'refunded to the client'
         }, (err, resp) => {
           if (err) {
-            console.log('error at updating swix status in resend job');
+            console.log('Error at updating swix status in resend job', err);
             next({}, null)
           } else {
             next()
@@ -82,7 +82,7 @@ const resend = (list, cb) => {
         let keyAvailable = `availableBalances.${item.fromSymbol}`
         let findData = {
           address: item.toAddress
-        }
+        };
         let updateData = {}
         updateData[keyLocked] = -item.receivedValue
         updateData[keyAvailable] = item.receivedValue - refundingBalance
@@ -119,10 +119,6 @@ const refund = () => {
     time -= 2 * 60 * 60 * 1000
 
     SwixerModel.find({
-      "lastUpdateOn": {
-        $lte: new Date(time)
-      },
-      "isScheduled": false,
       "tries": {
         $gte: 10
       },
@@ -134,12 +130,16 @@ const refund = () => {
         'remainingAmount': {
           $gt: 0
         }
-      }]
+      }],
+      "isScheduled": false,
+      "lastUpdateOn": {
+        $lte: new Date(time)
+      }
     }, (err, list) => {
       if (!err && list) {
         resend(list, () => {})
       } else {
-        console.log('error occured in resend job')
+        console.log('Error occured in resend job', err) 
       }
     })
   })

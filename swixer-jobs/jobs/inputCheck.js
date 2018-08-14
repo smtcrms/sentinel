@@ -41,7 +41,8 @@ const inputCheck = (list, cb) => {
             receivedTime: Date.now()
           }, (err, resp) => {
             if (err) {
-              console.log('error at updating swix status in resend job');
+              console.log('Error at updating swix status in resend job', err);
+              
               next({}, null)
             } else {
               next()

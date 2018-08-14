@@ -18,11 +18,11 @@ let {
 } = require('./outputCheck')
 
 const jobs = () => {
-  gasFee()
-  timeout()
-  input()
+  // gasFee()
+  // timeout()
+  // input()
   output()
-  balance()
+  // balance()
   // refund()
 }
 

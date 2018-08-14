@@ -26,7 +26,6 @@ var web3 = new Web3(new Web3.providers.HttpProvider('https://mainnet.infura.io/a
 const getTxReceipt = (txHash, coinType, cb) => {
   if (coinType === 'ETH') {
     web3.eth.getTransactionReceipt(txHash, (error, receipt) => {
-      console.log('error', error, receipt)
       if (error) cb(error, null)
       else cb(null, receipt)
     })
@@ -151,17 +150,9 @@ const outputJob = (list, cb) => {
 
   eachLimit(list, 1, (swix, iterate) => {
     let failedAmount = 0;
-    let txs = swix.txInfos;
-    swix = swix.toObject();
 
     waterfall([
       (next) => {
-        let result = _.filter(txs, (obj) => {
-          return obj.status === 0
-        })
-        swix.txInfos = result;
-        next()
-      }, (next) => {
         checkTxsStatus(swix, (error, _failedAmount) => {
           if (error) next({}, null)
           else {
@@ -208,30 +199,140 @@ const output = () => {
     let time = Date.now()
     time -= 10 * 60 * 1000
 
-    SwixerModel.find({
-      'outputStatus': 'pending',
-      'status': 'sent',
-      'txInfos': {
-        $elemMatch: {
-          status: 0
-        }
-      },
-      'remainingAmount': {
-        $eq: 0
-      },
-      'lastUpdateOn': {
-        $lt: new Date(time)
+    SwixerModel.aggregate([{
+      $project: {
+        outputStatus: 1,
+        status: 1,
+        txInfos: {
+          $filter: {
+            input: "$txInfos",
+            as: "txInfo",
+            cond: {
+              $eq: ["$$txInfo.status", 0]
+            }
+          }
+        },
+        remainingAmount: 1,
+        lastUpdateOn: 1,
+        swixHash: 1,
+        fromSymbol: 1,
+        toSymbol: 1,
+        toAddress: 1,
+        tries: 1
       }
     }, {
-      '_id': 0
-    }, (error, result) => {
-      outputJob(result, () => {
-        console.log('outputCheck job')
-      })
-    });
+      $match: {
+        $and: [{
+            txInfos: {
+              $ne: null
+            }
+          }, {
+            txInfos: {
+              $ne: []
+            }
+          },
+          {
+            outputStatus: 'pending'
+          }, {
+            status: 'sent',
+          }, {
+            remainingAmount: 0
+          }, {
+            lastUpdateOn: {
+              $lt: new Date(time)
+            }
+          }
+        ]
+      }
+    }], (error, result) => {
+      if (error) {
+        console.log('Error in output transactions check job', error)
+      } else if (result.length > 0) {
+        outputJob(result, () => {
+          console.log('outputCheck job')
+        })
+      }
+    })
   })
 }
 
 module.exports = {
   output
 }
+
+
+/* 
+SwixerModel.find({
+  'outputStatus': 'pending',
+  'status': 'sent',
+  'txInfos': {
+    $elemMatch: {
+      status: 0
+    }
+  },
+  'remainingAmount': {
+    $eq: 0
+  },
+  'lastUpdateOn': {
+    $lt: new Date(time)
+  }
+}, {
+  '_id': 0
+}, (error, result) => {
+  outputJob(result, () => {
+    console.log('outputCheck job')
+  })
+});
+ */
+/* 
+SwixerModel.aggregate([{
+  $project: {
+    outputStatus: 1,
+    status: 1,
+    txInfos: {
+      $filter: {
+        input: "$txInfos",
+        as: "txInfo",
+        cond: {
+          $eq: ["$$txInfo.status", 0]
+        }
+      }
+    },
+    remainingAmount: 1,
+    lastUpdateOn: 1,
+    swixHash: 1,
+    fromSymbol: 1,
+    toSymbol: 1,
+    toAddress: 1
+  }
+}, {
+  $match: {
+    $and: [{
+      txInfos: {
+        $ne: null
+      }
+    }, {
+      txInfos: {
+        $ne: []
+      }
+    }, {
+      outputStatus: 'pending'
+    }, {
+      status: 'sent',
+    }, {
+      remainingAmount: 0
+    }, {
+      lastUpdateOn: {
+        $lt: new Date(time)
+      }
+    }]
+  }
+}], (error, result) => {
+  if (error) {
+    console.log('Error in output transactions check job', error)
+  } else if (result.length > 0) {
+    outputJob(result, () => {
+      console.log('outputCheck job')
+    })
+  }
+}) */

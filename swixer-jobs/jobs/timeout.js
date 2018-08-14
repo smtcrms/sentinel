@@ -9,7 +9,7 @@ let {
 
 let {
   updateSwix
-} = require('../server/dbos/swixer.dbo')
+} = require('../server/dbos/swixer.dbo');
 
 let SwixerModel = require('../server/models/swixer.model');
 
@@ -23,17 +23,18 @@ const timeoutJob = (list, cb) => {
           toAddress: address
         }, {
           status: 'timeout',
-          message: 'no funds deposited',
+          message: 'funds not deposited',
           tries: 10,
           remainingAmount: 0
         }, (err, resp) => {
           if (err) {
-            console.log('error at updating swix status in resend job');
-            next({}, null)
+            console.log('Error at updating swix status in resend job', err);
+
+            next({}, null);
           } else {
-            next()
+            next();
           }
-        })
+        });
       }
     ], (err, resp) => {
       iterate();
@@ -45,8 +46,8 @@ const timeoutJob = (list, cb) => {
 
 const timeout = () => {
   scheduleJob('0 0 * * *', () => {
-    let time = Date.now()
-    time -= 24 * 60 * 60 * 1000
+    let time = Date.now();
+    time -= 24 * 60 * 60 * 1000;
 
     SwixerModel.find({
       'status': 'wait',
@@ -66,8 +67,10 @@ const timeout = () => {
     }, {
       '_id': 0
     }, (error, result) => {
+      //Update swix transctions as unreachable state if it is more than 24 hours
+
       timeoutJob(result, () => {
-        console.log('timeout job')
+        console.log('completed the swix transactions to unreachable state job')
       })
     });
   })
