@@ -23,8 +23,10 @@ let SwixerModel = require('../server/models/swixer.model');
 
 var web3 = new Web3(new Web3.providers.HttpProvider('https://mainnet.infura.io/aiAxnxbpJ4aG0zed1aMy'));
 
+// to check txn receipt of a status
 const getTxReceipt = (txHash, coinType, cb) => {
   if (coinType === 'ETH') {
+    // fetching the txn receipt from ETHEREUM network
     web3.eth.getTransactionReceipt(txHash, (error, receipt) => {
       if (error) cb(error, null)
       else cb(null, receipt)
@@ -32,6 +34,7 @@ const getTxReceipt = (txHash, coinType, cb) => {
   } else if (coinType === 'BTC') {
     let pivxChainTxUrl = `${pivxChain}${txHash}`
     try {
+      // fetching the txn from pivx chain
       axios.get(pivxChainTxUrl)
         .then((receipt) => {
           receipt = receipt.data
@@ -43,10 +46,16 @@ const getTxReceipt = (txHash, coinType, cb) => {
           }
         })
     } catch (error) {
-      cb({}, null)
+      cb({
+        message: 'Exception in getting tx receipt',
+        error
+      }, null)
     }
   } else {
-    cb({}, null)
+    cb({
+      message: 'CoinType is neither ETH nor BTC',
+      error
+    }, null)
   }
 }
 
@@ -55,15 +64,20 @@ const checkTxStatus = (tx, coinType, cb) => {
   let txHash = tx.txHash;
   waterfall([
     (next) => {
+      //fetching txn receipt of a single txn
       getTxReceipt(txHash, coinType, (error, _txReceipt) => {
         if (error) {
-          next(error, null)
+          next({
+            message: 'Error in fetching tx receipt',
+            error
+          }, null)
         } else {
           txReceipt = _txReceipt
           next()
         }
       })
     }, (next) => {
+      //checkong whether txn found in network or not
       if (txReceipt) {
         let status = parseInt(txReceipt['status'])
         if (status === 1) {
@@ -91,37 +105,48 @@ const checkTxStatus = (tx, coinType, cb) => {
 }
 
 const checkTxsStatus = (swix, cb) => {
-  let txInfos = swix.txInfos
+  let txInfos = swix.txInfos // array of txns
   let symbol = swix.toSymbol
   let failedAmount = 0;
 
   eachLimit(txInfos, 1, (tx, iterate) => {
     waterfall([
       (next) => {
+        // checking whether a single txn is success or not
         checkTxStatus(tx, coins[symbol].type, (error, txReport) => {
           if (error) {
-            next({}, null)
+            next({
+              message: 'Error in check tx status',
+              error
+            }, null)
           }
           if (txReport.status === 'success') {
             next(null, {
               status: 1
             })
           } else {
-            failedAmount += txReport.failedAmount
+            failedAmount += txReport.failedAmount // summing all failed txns amount
             next(null, {
               status: -1
             })
           }
         })
       }, (txStatus, next) => {
-        updateSwix({
+        let queryObject = {
           'swixHash': swix.swixHash,
           'txInfos.txHash': tx.txHash
-        }, {
+        }
+        let updateObject = {
           'txInfos.$.status': txStatus.status
-        }, (error, resp) => {
-          if (error) next({}, null)
-          else {
+        }
+        // updating single txn status from txInfos array
+        updateSwix(queryObject, updateObject, (error, resp) => {
+          if (error) {
+            next({
+              message: 'Error at updating swix single txn status',
+              error
+            }, null)
+          } else {
             let balance = swix.receivedValue;
             let keyAvailable = `availableBalances.${swix.fromSymbol}`
             let keyLocked = `lockedBalances.${swix.fromSymbol}`
@@ -131,14 +156,20 @@ const checkTxsStatus = (swix, cb) => {
             let updateData = {}
             updateData[keyAvailable] = balance
             updateData[keyLocked] = -balance
+            //updating balances of account locked to available
             updateBalances(findData, updateData, (error, resp) => {
-              if (error) next({}, null)
+              if (error) next({
+                message: 'Error in update balances',
+                error
+              }, null)
               else next(null)
             })
           }
         })
       }
     ], (error, resp) => {
+      if (error)
+        console.log('Error in check txns status job', error)
       iterate()
     })
   }, () => {
@@ -148,45 +179,56 @@ const checkTxsStatus = (swix, cb) => {
 
 const outputJob = (list, cb) => {
 
-  eachLimit(list, 1, (swix, iterate) => {
-    let failedAmount = 0;
+  eachLimit(list, 1, (swix, iterate) => { //iterating the loop for each object. takes only one object at a time executes next object after completion of next
+    let failedAmount = 0; // failed amount of swix txn
 
     waterfall([
       (next) => {
-        checkTxsStatus(swix, (error, _failedAmount) => {
-          if (error) next({}, null)
+        checkTxsStatus(swix, (error, _failedAmount) => { // checking the out txns are success or not
+          if (error) next({
+            message: 'Error at check transaction status method',
+            error
+          }, null)
           else {
             failedAmount = _failedAmount
             next()
           }
         })
       }, (next) => {
+        let queryObject = {
+          swixHash: swix.swixHash
+        }
         if (failedAmount > 0) {
           if (swix.tries >= 10) {
             swix.tries -= 1
           }
-          updateSwix({
-            swixHash: swix.swixHash
-          }, {
+          let updateObject = {
             isScheduled: false,
             tries: swix.tries,
             remainingAmount: failedAmount
-          }, (error, resp) => {
-            if (error) next({}, null)
-            else next()
-          })
+          }
+          next(null, queryObject, updateObject)
         } else {
-          updateSwix({
-            swixHash: swix.swixHash
-          }, {
+          let updateObject = {
             outputStatus: 'success'
-          }, (error, resp) => {
-            if (error) next({}, null)
-            else next()
-          })
+          }
+          next(null, queryObject, updateObject)
         }
+      }, (queryObject, updateObject, next) => {
+        // updating the swix txn. if failed amount 0 then out txns are success else reschedule txns which are failed
+        updateSwix(queryObject, updateObject, (error, resp) => {
+          if (error) {
+            next({
+              message: 'Error in updateSwix',
+              error
+            })
+          }
+          next()
+        })
       }
-    ], (err, resp) => {
+    ], (error, resp) => {
+      if (error)
+        console.log('Error in out transactions check job', error)
       iterate();
     })
   }, () => {
@@ -195,62 +237,57 @@ const outputJob = (list, cb) => {
 }
 
 const output = () => {
-  scheduleJob('*/5 * * * *', () => {
-    let time = Date.now()
-    time -= 10 * 60 * 1000
+  scheduleJob('*/2 * * * * *', () => {
+    let time = Date.now() - 10 * 60 * 1000; // substracting 10 minutes of time from current timestamp
 
-    SwixerModel.aggregate([{
-      $project: {
-        outputStatus: 1,
-        status: 1,
+    let projectObject = {
+      outputStatus: 1,
+      status: 1,
+      txInfos: {
+        '$filter': {
+          input: "$txInfos",
+          as: "txInfo",
+          cond: {
+            '$eq': ["$$txInfo.status", 0]
+          }
+        }
+      },
+      remainingAmount: 1,
+      lastUpdateOn: 1,
+      swixHash: 1,
+      fromSymbol: 1,
+      toSymbol: 1,
+      toAddress: 1,
+      tries: 1,
+      receivedValue: 1
+    }
+
+    let matchObject = {
+      $and: [{
         txInfos: {
-          $filter: {
-            input: "$txInfos",
-            as: "txInfo",
-            cond: {
-              $eq: ["$$txInfo.status", 0]
-            }
-          }
-        },
-        remainingAmount: 1,
-        lastUpdateOn: 1,
-        swixHash: 1,
-        fromSymbol: 1,
-        toSymbol: 1,
-        toAddress: 1,
-        tries: 1
-      }
+          '$ne': null
+        }
+      }, {
+        txInfos: {
+          '$ne': []
+        }
+      }, {
+        remainingAmount: 0
+      }, {
+        lastUpdateOn: {
+          '$lt': new Date(time)
+        }
+      }]
+    }
+    SwixerModel.aggregate([{ // finding the reverse txns completed 10 mins ago
+      $project: projectObject
     }, {
-      $match: {
-        $and: [{
-            txInfos: {
-              $ne: null
-            }
-          }, {
-            txInfos: {
-              $ne: []
-            }
-          },
-          {
-            outputStatus: 'pending'
-          }, {
-            status: 'sent',
-          }, {
-            remainingAmount: 0
-          }, {
-            lastUpdateOn: {
-              $lt: new Date(time)
-            }
-          }
-        ]
-      }
+      $match: matchObject
     }], (error, result) => {
       if (error) {
         console.log('Error in output transactions check job', error)
       } else if (result.length > 0) {
-        outputJob(result, () => {
-          console.log('outputCheck job')
-        })
+        outputJob(result, () => {}) //out txns checking method
       }
     })
   })
@@ -259,80 +296,3 @@ const output = () => {
 module.exports = {
   output
 }
-
-
-/* 
-SwixerModel.find({
-  'outputStatus': 'pending',
-  'status': 'sent',
-  'txInfos': {
-    $elemMatch: {
-      status: 0
-    }
-  },
-  'remainingAmount': {
-    $eq: 0
-  },
-  'lastUpdateOn': {
-    $lt: new Date(time)
-  }
-}, {
-  '_id': 0
-}, (error, result) => {
-  outputJob(result, () => {
-    console.log('outputCheck job')
-  })
-});
- */
-/* 
-SwixerModel.aggregate([{
-  $project: {
-    outputStatus: 1,
-    status: 1,
-    txInfos: {
-      $filter: {
-        input: "$txInfos",
-        as: "txInfo",
-        cond: {
-          $eq: ["$$txInfo.status", 0]
-        }
-      }
-    },
-    remainingAmount: 1,
-    lastUpdateOn: 1,
-    swixHash: 1,
-    fromSymbol: 1,
-    toSymbol: 1,
-    toAddress: 1
-  }
-}, {
-  $match: {
-    $and: [{
-      txInfos: {
-        $ne: null
-      }
-    }, {
-      txInfos: {
-        $ne: []
-      }
-    }, {
-      outputStatus: 'pending'
-    }, {
-      status: 'sent',
-    }, {
-      remainingAmount: 0
-    }, {
-      lastUpdateOn: {
-        $lt: new Date(time)
-      }
-    }]
-  }
-}], (error, result) => {
-  if (error) {
-    console.log('Error in output transactions check job', error)
-  } else if (result.length > 0) {
-    outputJob(result, () => {
-      console.log('outputCheck job')
-    })
-  }
-}) */

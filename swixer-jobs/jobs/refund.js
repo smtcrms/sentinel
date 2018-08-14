@@ -16,7 +16,6 @@ let {
   transfer
 } = require('../factories/transactions');
 let {
-  updateSwixStatus,
   updateSwix
 } = require('../server/dbos/swixer.dbo')
 let {
@@ -28,84 +27,103 @@ let {
 } = require('../config/vars')
 
 const resend = (list, cb) => {
-  eachLimit(list, 1, (item, iterate) => {
-    console.log('item', item.refundAddress)
-    let address = item.toAddress;
-    let fromSymbol = item.fromSymbol;
-    let toSymbol = item.toSymbol;
-    let refundAddress = item.refundAddress;
+  eachLimit(list, 1, (swix, iterate) => {
+    let address = swix.toAddress; // deposit address
+    let fromSymbol = swix.fromSymbol; // from coin symbol
+    let toSymbol = swix.toSymbol; // to coin symbol
+    let refundAddress = swix.refundAddress; // refund address of the user
     let refundingBalance = null;
     let accountDetails = null;
-    let rate = item.rate;
+    let rate = swix.rate; // rate of the swix txn at the time raising a swix request
 
     waterfall([
       (next) => {
-        let remainAmount = 'remainingAmount' in item ? true : false
+        let remainAmount = 'remainingAmount' in swix ? true : false // checking whether the remaingAmount field exist in swix object
+        // if remainAmount not present send total amount back no need of conversion
         if (!remainAmount) {
-          refundingBalance = item.receivedValue
+          refundingBalance = swix.receivedValue
           next()
         } else {
-          let amount = item.remainingAmount
-          let fromDecimals = Math.pow(10, decimals[fromSymbol]);
-          let toDecimals = Math.pow(10, decimals[toSymbol])
-          amount = ((amount / toDecimals) * fromDecimals) / rate //check rate 
+          // some amount transferred. some amount got struck to transfer for more than 2 hours. so we need to recalculate of from coin symbol 
+          let amount = swix.remainingAmount
+          let fromDecimals = Math.pow(10, decimals[fromSymbol]); // from coin decimals
+          let toDecimals = Math.pow(10, decimals[toSymbol]) // to coin decimals
+          amount = ((amount / toDecimals) * fromDecimals) / rate // calculation of from coin from remaining amount of to coin
           refundingBalance = amount
           next()
         }
       }, (next) => {
-        getAccount(address, (err, details) => {
-          if (err) {
-            console.log('error at getAccount in resend job');
-            next({}, null)
+        // fetching the amount of deposit address
+        getAccount(address, (error, details) => {
+          if (error) {
+            next({
+              message: 'Error at getAccount in resend job',
+              error
+            }, null)
           } else {
             accountDetails = details;
             next()
           }
         })
       }, (next) => {
-        updateSwix({
+        let queryObject = {
           toAddress: address
-        }, {
+        }
+        let updateObject = {
           isScheduled: true,
           status: 'refunded',
           message: 'refunded to the client'
-        }, (err, resp) => {
-          if (err) {
-            console.log('Error at updating swix status in resend job', err);
-            next({}, null)
+        }
+
+        // updating swix as refunding amount to the user
+        updateSwix(queryObject, updateObject, (error, resp) => {
+          if (error) {
+            next({
+              message: 'Error at updating swix status in resend job',
+              error
+            }, null)
           } else {
             next()
           }
         })
       }, (next) => {
-        let keyLocked = `lockedBalances.${item.fromSymbol}`
-        let keyAvailable = `availableBalances.${item.fromSymbol}`
+        let keyLocked = `lockedBalances.${swix.fromSymbol}`
+        let keyAvailable = `availableBalances.${swix.fromSymbol}`
         let findData = {
-          address: item.toAddress
+          address: swix.toAddress
         };
         let updateData = {}
-        updateData[keyLocked] = -item.receivedValue
-        updateData[keyAvailable] = item.receivedValue - refundingBalance
+        updateData[keyLocked] = -swix.receivedValue
+        updateData[keyAvailable] = swix.receivedValue - refundingBalance
+        // updating the balances of deposit address after refunding
         updateBalances(findData, updateData, (error, resp) => {
           if (error) {
-            console.log('error at updateBalnces in resend job')
-            next({}, null)
+            next({
+              message: 'Error at updateBalnces in resend job',
+              error
+            }, null)
           } else {
             next()
           }
         })
       }, (next) => {
-        let privateKey = accountDetails.privateKey;
-        transfer(privateKey, refundAddress, refundingBalance, fromSymbol, (err, resp) => {
-          if (err) {
-            console.log('error at transfer in resend job')
-            next({}, null)
+        let privateKey = accountDetails.privateKey; // private key of deposit address
+        // transfering the amount from deposit address
+        transfer(privateKey, refundAddress, refundingBalance, fromSymbol, (error, resp) => {
+          if (error) {
+            console.log('')
+            next({
+              message: 'Error at transfer in resend job',
+              error
+            }, null)
           } else {
             next()
           }
         })
       }
-    ], (err, resp) => {
+    ], (error, resp) => {
+      if (error)
+        console.log('error in refund job', error)
       iterate();
     })
   }, () => {
@@ -115,31 +133,31 @@ const resend = (list, cb) => {
 
 const refund = () => {
   scheduleJob('*/10 * * * *', () => {
-    let time = Date.now()
-    time -= 2 * 60 * 60 * 1000
-
-    SwixerModel.find({
+    let time = Date.now() - 2 * 60 * 60 * 1000
+    let queryObject = {
       "tries": {
-        $gte: 10
+        '$gte': 10
       },
-      $or: [{
+      '$or': [{
         'remainingAmount': {
-          $exists: false
+          '$exists': false
         }
       }, {
         'remainingAmount': {
-          $gt: 0
+          '$gt': 0
         }
       }],
       "isScheduled": false,
       "lastUpdateOn": {
-        $lte: new Date(time)
+        '$lte': new Date(time)
       }
-    }, (err, list) => {
-      if (!err && list) {
+    }
+    //fetching the swix txns which are deposited funds and no money sent back to user since more than 2 hours
+    SwixerModel.find(queryObject, (error, list) => {
+      if (error) {
+        console.log('Error occured in resend job', error)
+      } else if (list.length) {
         resend(list, () => {})
-      } else {
-        console.log('Error occured in resend job', err) 
       }
     })
   })

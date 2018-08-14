@@ -13,37 +13,43 @@ let {
   getBalance
 } = require('../factories/accounts')
 
-const inputCheck = (list, cb) => {
+const inputCheck = (list, cb) => { //check for deposit of funds
   eachLimit(list, 1, (item, iterate) => {
-    let address = item.toAddress;
-    let fromSymbol = item.fromSymbol;
-    let balance = 0;
+    let address = item.toAddress; //deposit address
+    let fromSymbol = item.fromSymbol; // from coin symbol of swix transaction
+    let balance = 0; //deposited balance
 
     waterfall([
       (next) => {
-        getBalance(address, fromSymbol, (error, _balance) => {
+        getBalance(address, fromSymbol, (error, _balance) => { //checking the balance of deposit address
           if (error) {
             next({
-              message: 'error in getting balance'
+              message: 'error in getting balance',
+              error
             }, null)
           } else {
-            balance = _balance
+            balance = _balance // deposited amount
             next();
           }
         })
       }, (next) => {
-        if (balance > 0) {
-          updateSwix({
+        if (balance > 0) { //checking for the amount deposited is greater or not
+          let queryObject = {
             toAddress: address
-          }, {
+          }
+
+          let updateObject = {
             status: 'gotFunds',
             receivedValue: balance,
             receivedTime: Date.now()
-          }, (err, resp) => {
-            if (err) {
-              console.log('Error at updating swix status in resend job', err);
-              
-              next({}, null)
+          }
+          
+          updateSwix(queryObject, updateObject, (error, resp) => { //updating received time and received value for swix
+            if (error) {
+              next({
+                message: 'Error in updating swix of input check tx',
+                error
+              }, null)
             } else {
               next()
             }
@@ -52,7 +58,9 @@ const inputCheck = (list, cb) => {
           next()
         }
       }
-    ], (err, resp) => {
+    ], (error, resp) => {
+      if (error)
+        console.log('inTransactionJob', error)
       iterate();
     })
   }, () => {
@@ -62,27 +70,33 @@ const inputCheck = (list, cb) => {
 
 const input = () => {
   scheduleJob('0 * * * * *', () => {
-    SwixerModel.find({
-      status: 'wait',
-      isScheduled: false,
-      $or: [{
+
+    let queryObject = {
+      'status': 'wait',
+      'isScheduled': false,
+      '$or': [{
         'remainingAmount': {
-          $exists: false
+          '$exists': false
         }
       }, {
         'remainingAmount': {
-          $gt: 0
+          '$gt': 0
         }
       }],
       'tries': {
-        $lt: 10
+        '$lt': 10
       }
-    }, {
+    }
+
+    SwixerModel.find(queryObject, {
       '_id': 0
     }, (error, result) => {
-      inputCheck(result, () => {
-        console.log('input check job');
-      })
+      if (error) {
+        console.log('Error at in transaction check job', error);
+      } else if (result.length > 0) {
+
+        inputCheck(result, () => {})
+      }
     });
   })
 }
@@ -90,23 +104,3 @@ const input = () => {
 module.exports = {
   input
 }
-
-/* let a = {
-  "_id": ObjectId("5b5997de0ef787c3fdee2357"),
-  "tries": 0,
-  "isScheduled": false,
-  "status": "wait",
-  "message": "Swix is complete.",
-  "txInfos": [],
-  "fromSymbol": "SENT",
-  "toSymbol": "PIVX",
-  "clientAddress": "0x47bd80a152d0d77664d65de5789df575c9cabbdb",
-  "destinationAddress": "DQvWbq96oxPH1tkKrscXFaRkxsMBZwoEx8",
-  "delayInSeconds": 60,
-  "rate": 0.0038829435635694266,
-  "refundAddress": "0x47bd80a152d0d77664d65de5789df575c9cabbdb",
-  "toAddress": "0x178fbac45338a185f9d1340f73bab200592bb67d",
-  "swixHash": "4d430453aee15fb889b13e6163e43272",
-  "insertedOn": new Date(),
-  "lastUpdateOn": new Date(),
-} */
