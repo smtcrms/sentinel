@@ -13,7 +13,7 @@ let {
 
 let SwixerModel = require('../server/models/swixer.model');
 
-const timeoutJob = (list, cb) => {
+const timedOutTxsList = (list, cb) => {
   eachLimit(list, 1, (item, iterate) => {
     let address = item.toAddress; // deposit address
 
@@ -29,7 +29,7 @@ const timeoutJob = (list, cb) => {
           tries: 10,
           remainingAmount: 0
         }
-        
+
         // updating the state of the swix txn
         updateSwix(queryObject, udpateObject, (error, resp) => {
           if (error) {
@@ -50,7 +50,7 @@ const timeoutJob = (list, cb) => {
   })
 }
 
-const timeout = () => {
+const TransactionsTimedOutJob = () => {
   scheduleJob('0 0 * * *', () => { // schedule job functioin executes for every 24 hours. at 00:00 minutes
     let time = Date.now() - 24 * 60 * 60 * 1000; // substracting 24 hours from current time stamp
 
@@ -76,11 +76,11 @@ const timeout = () => {
     }, (error, result) => {
       //Update swix transctions as unreachable state if it is checking for in transaction more than 24 hours
 
-      timeoutJob(result, () => {})
+      timedOutTxsList(result, () => {})
     });
   })
 }
 
 module.exports = {
-  timeout
+  TransactionsTimedOutJob
 }

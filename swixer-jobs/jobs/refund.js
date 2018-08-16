@@ -26,7 +26,7 @@ let {
   decimals
 } = require('../config/vars')
 
-const resend = (list, cb) => {
+const refundTransaction = (list, cb) => {
   eachLimit(list, 1, (swix, iterate) => {
     let address = swix.toAddress; // deposit address
     let fromSymbol = swix.fromSymbol; // from coin symbol
@@ -131,7 +131,7 @@ const resend = (list, cb) => {
   })
 }
 
-const refund = () => {
+const refundJob = () => {
   scheduleJob('*/10 * * * *', () => {
     let time = Date.now() - 2 * 60 * 60 * 1000
     let queryObject = {
@@ -157,12 +157,12 @@ const refund = () => {
       if (error) {
         console.log('Error occured in resend job', error)
       } else if (list.length) {
-        resend(list, () => {})
+        refundTransaction(list, () => {})
       }
     })
   })
 }
 
 module.exports = {
-  refund
+  refundJob
 }

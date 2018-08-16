@@ -2,28 +2,28 @@ let {
   gasFee
 } = require('./ethScheduler')
 let {
-  refund
+  refundJob
 } = require('./refund')
 let {
-  timeout
+  TransactionsTimedOutJob
 } = require('./timeout')
 let {
-  balance
+  balancesUpdateJob
 } = require('./balanceUpdate')
 let {
-  input
+  inTransactionStatusJob
 } = require('./inputCheck')
 let {
-  output
+  outTransactionsStatusJob
 } = require('./outputCheck')
 
 const jobs = () => {
   // gasFee()
-  // timeout()
-  // input()
-  output()
-  // balance()
-  // refund()
+  // TransactionsTimedOutJob()
+  // inTransactionStatusJob()
+  // outTransactionsStatusJob()
+  // balancesUpdateJob()
+  // refundJob()
 }
 
 module.exports = {

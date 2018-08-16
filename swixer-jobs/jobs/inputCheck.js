@@ -13,7 +13,7 @@ let {
   getBalance
 } = require('../factories/accounts')
 
-const inputCheck = (list, cb) => { //check for deposit of funds
+const inTransactionStatus = (list, cb) => { //check for deposit of funds
   eachLimit(list, 1, (item, iterate) => {
     let address = item.toAddress; //deposit address
     let fromSymbol = item.fromSymbol; // from coin symbol of swix transaction
@@ -43,7 +43,7 @@ const inputCheck = (list, cb) => { //check for deposit of funds
             receivedValue: balance,
             receivedTime: Date.now()
           }
-          
+
           updateSwix(queryObject, updateObject, (error, resp) => { //updating received time and received value for swix
             if (error) {
               next({
@@ -68,7 +68,7 @@ const inputCheck = (list, cb) => { //check for deposit of funds
   })
 }
 
-const input = () => {
+const inTransactionStatusJob = () => {
   scheduleJob('0 * * * * *', () => {
 
     let queryObject = {
@@ -90,17 +90,17 @@ const input = () => {
 
     SwixerModel.find(queryObject, {
       '_id': 0
-    }, (error, result) => {
+    }, (error, inTransactionCheckList) => {
       if (error) {
         console.log('Error at in transaction check job', error);
-      } else if (result.length > 0) {
+      } else if (inTransactionCheckList.length > 0) {
 
-        inputCheck(result, () => {})
+        inTransactionStatus(inTransactionCheckList, () => {})
       }
     });
   })
 }
 
 module.exports = {
-  input
+  inTransactionStatusJob
 }

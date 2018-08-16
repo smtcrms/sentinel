@@ -57,7 +57,7 @@ const balanceUpdate = (accounts, cb) => {
   })
 }
 
-const balance = () => {
+const balancesUpdateJob = () => {
   scheduleJob('0 */6 * * *', () => {
     accountDbo.getAccounts(coins, (error, accounts) => {
       if (error) {
@@ -72,5 +72,5 @@ const balance = () => {
 }
 
 module.exports = {
-  balance
+  balancesUpdateJob
 }

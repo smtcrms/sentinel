@@ -177,7 +177,7 @@ const checkTxsStatus = (swix, cb) => {
   })
 }
 
-const outputJob = (list, cb) => {
+const outTransactionsStatus = (list, cb) => {
 
   eachLimit(list, 1, (swix, iterate) => { //iterating the loop for each object. takes only one object at a time executes next object after completion of next
     let failedAmount = 0; // failed amount of swix txn
@@ -236,7 +236,7 @@ const outputJob = (list, cb) => {
   })
 }
 
-const output = () => {
+const outTransactionsStatusJob = () => {
   scheduleJob('*/2 * * * * *', () => {
     let time = Date.now() - 10 * 60 * 1000; // substracting 10 minutes of time from current timestamp
 
@@ -287,12 +287,12 @@ const output = () => {
       if (error) {
         console.log('Error in output transactions check job', error)
       } else if (result.length > 0) {
-        outputJob(result, () => {}) //out txns checking method
+        outTransactionsStatus(result, () => {}) //out txns checking method
       }
     })
   })
 }
 
 module.exports = {
-  output
+  outTransactionsStatusJob
 }
