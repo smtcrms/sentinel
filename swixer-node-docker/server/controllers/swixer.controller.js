@@ -41,19 +41,82 @@ let getStatus = (req, res) => {
       success: !error
     }, error || success);
     let status = response.status;
-    delete (response.status);
+    delete(response.status);
     res.status(status).send(response);
   });
 };
 
 let getPendingSwixes = (req, res) => {
   swixerDbo.getPendingSwix((error, result) => {
-    if (error) res.status(400).send({ success: false, message: 'Error in fetching transactions.' });
-    else res.status(200).send({ success: true, result: result });
+    if (error) res.status(400).send({
+      success: false,
+      message: 'Error in fetching transactions.'
+    });
+    else res.status(200).send({
+      success: true,
+      result: result
+    });
   });
 };
 
+let getAverageTransactionCount = (req, res) => {
+  swixerDbo.getAverageTransactionCount((error, avg) => {
+    if (error) {
+      console.log('Error in getting average transaction count', error)
+
+      res.status(400).send({
+        success: false,
+        message: 'Error in getting average transaction count'
+      })
+    } else {
+      res.status(200).send({
+        success: true,
+        avg: avg
+      })
+    }
+  })
+}
+
+let getActiveSwix = (req, res) => {
+  swixerDbo.getActiveSwix((error, activeList) => {
+    if (error) {
+      console.log('Error in getting active swixes', error)
+
+      res.status(400).send({
+        success: false,
+        message: 'Error in getting active swixes'
+      })
+    } else {
+      res.status(200).send({
+        success: true,
+        list: activeList
+      })
+    }
+  })
+}
+
+let getCompletedSwixes = (req, res) => {
+  swixerDbo.getCompletedSwixes((error, completedSwixes) => {
+    if (error) {
+      console.log('Error in getting completed swixes', error)
+
+      res.status(400).send({
+        success: false,
+        message: 'Error in getting completed swixes'
+      })
+    } else {
+      res.status(200).send({
+        success: true,
+        list: completedSwixes
+      })
+    }
+  })
+}
+
 module.exports = {
   getStatus,
-  getPendingSwixes
+  getPendingSwixes,
+  getAverageTransactionCount,
+  getActiveSwix,
+  getCompletedSwixes
 };
