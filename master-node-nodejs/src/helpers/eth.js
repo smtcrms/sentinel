@@ -358,7 +358,7 @@ const addVpnUsage = (fromAddr, toAddr, sentBytes, sessionDuration, amount, timeS
 
   async.waterfall([
     (next) => {
-      getVpnSessionCount(toAddr, (err, sessionsCount) => {
+      getVpnSessionCount(toAddr, (err, sessionsCount) => {  //toAddr: client account address
         if (!err) {
           getEncodedSessionId(toAddr, sessionsCount, (sessId) => {
             sessionId = sessId;

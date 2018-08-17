@@ -135,8 +135,8 @@ const getSocksList = (req, res) => {
  */
 
 const getCurrentVpnUsage = (req, res) => {
-  let accountAddr = account_addr in req.body ? req.body['account_addr'] : REFERRAL_DUMMY
-  let sessionName = req.body['session_name']
+  let accountAddr = req.body['account_addr'];
+  let sessionName = req.body['session_name'];
   if (accountAddr)
     accountAddr = accountAddr.toLowerCase();
 
@@ -147,7 +147,7 @@ const getCurrentVpnUsage = (req, res) => {
     _id: 0,
     server_usage: 1
   }, (err, result) => {
-    if (!result || !result.usage) {
+    if (!result || !result.server_usage) {
       res.send({
         success: true,
         usage: {
@@ -158,7 +158,7 @@ const getCurrentVpnUsage = (req, res) => {
     } else {
       res.send({
         success: true,
-        usage: result.server_usage || result.usage
+        usage: result.server_usage
       })
     }
   })
@@ -257,7 +257,7 @@ const getVpnCredentials = (req, res) => {
           let ip = node.ip;
           let port = 3000;
           let body = {
-            account_addr: accountAddr === REFERRAL_DUMMY ? deviceId : accountAddr,
+            account_addr: accountAddr === REFERRAL_DUMMY ? deviceId : accountAddr,  // Fixes for SLC
             token: token
           };
           let url = 'http://' + ip + ':' + port + '/token';
