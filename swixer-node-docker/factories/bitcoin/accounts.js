@@ -1,6 +1,10 @@
 let axios = require('axios');
 let gateways = require('../../config/btc/gateways');
 
+let {
+  pivxChain
+} = require('../../config/vars')
+
 
 let getAccount = (coinSymbol, cb) => {
   let url = `${gateways[coinSymbol].server}/address`;
@@ -41,7 +45,33 @@ let getBalance = (address, coinSymbol, cb) => {
     });
 };
 
+const getBTCTxReceipt = (txHash, coinSymbol, cb) => {
+
+  let url = `${gateways[coinSymbol].txHashUrl}${txHash}`
+  try {
+    axios.get(url)
+      .then((resp) => {
+        resp = resp.data
+        if (resp !== 'unknown') {
+          resp.status = 1
+          cb(null, resp)
+        } else {
+          cb(null, {
+            status: 0
+          })
+        }
+      })
+  } catch (error) {
+    console.log('Error in fetching pivx tx details', error)
+
+    cb({
+      message: 'Error in fetching pivx tx details'
+    }, null)
+  }
+}
+
 module.exports = {
   getAccount,
-  getBalance
+  getBalance,
+  getBTCTxReceipt
 };

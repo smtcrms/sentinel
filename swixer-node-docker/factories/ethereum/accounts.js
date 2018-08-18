@@ -61,8 +61,61 @@ let getAccount = (cb) => {
   }
 };
 
+let getTimeOfTx = (txHash, cb) => {
+  try {
+    let blockNumber = web3.eth.getTransaction(txHash).blockNumber
+    let time = web3.eth.getBlock(blockNumber).timestamp
+    cb(null, time * 1000)
+  } catch (error) {
+    console.log('Error occured in getting time', error)
+    cb({
+      'message': 'Error occured in getting time '
+    }, null)
+  }
+}
+
+let getETHTxReceipt = ((txHash, cb) => {
+  let errorMessage = {
+    message: 'Error in finding Tx Receipt'
+  }
+
+  web3.eth.getTransactionReceipt(txHash, (error, receipt) => {
+
+    if (error || !receipt) {
+      console.log('Error in finding Tx Receipt', error);
+
+      cb(errorMessage, null)
+    } else {
+      getTimeOfTx(txHash, (error, time) => {
+        if (error) cb(error, null)
+        else {
+          receipt.time = time
+          cb(null, receipt)
+        }
+      })
+    }
+  })
+})
+
+let getETHTx = ((txHash, cb) => {
+  let errorMessage = {
+    message: 'Error in finding Txn'
+  }
+
+  web3.eth.getTransaction(txHash, (error, tx) => {
+
+    if (error) {
+      console.log('Error in finding Txn', error);
+
+      cb(errorMessage, null)
+    } else cb(null, tx)
+  })
+})
+
 module.exports = {
   getBalance,
   getTransactionCount,
-  getAccount
+  getAccount,
+  getETHTxReceipt,
+  getETHTx
 };

@@ -8,4 +8,5 @@ module.exports = (server) => {
   server.get('/active', swixController.getActiveSwix);
   server.get('/completed', swixController.getCompletedSwixes);
   server.get('/average', swixController.getAverageTransactionCount);
+  server.post('/txhash', swixController.getTxHashDetails);
 };

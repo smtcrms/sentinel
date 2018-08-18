@@ -1,6 +1,10 @@
 let async = require('async');
 let swixerDbo = require('../dbos/swixer.dbo');
-
+let {
+  getTxReceipt,
+  getDetailsFromTx,
+  getTxn
+} = require('../helpers/account.helper')
 
 let getStatus = (req, res) => {
   let swixHash = req.query.swixHash;
@@ -113,10 +117,149 @@ let getCompletedSwixes = (req, res) => {
   })
 }
 
+const getTxHashDetails = (req, res) => {
+  let {
+    swixHash,
+    txHash,
+  } = req.body
+
+  let fromSymbol = ''
+  let receipt = null
+  let swix = null
+
+  async.waterfall([
+    (next) => {
+      swixerDbo.getSwix(swixHash, (error, _swix) => {
+        if (error) {
+          console.log('Error in finding swix', error)
+
+          next({
+            message: 'Error in finding swix'
+          }, null)
+        } else if (!_swix) {
+          next({
+            message: 'Swix not found'
+          }, null)
+        } else {
+          swix = _swix
+          fromSymbol = _swix.fromSymbol
+          next(null);
+        }
+      })
+    }, (next) => {
+      getTxReceipt(txHash, fromSymbol, (error, _receipt) => {
+        if (error) next(error, null)
+        else if (_receipt) {
+          let status = parseInt(_receipt.status)
+          let txTime = parseInt(_receipt.time)
+          txTime = new Date(txTime)
+          if (status === 1) {
+            if (txTime > new Date(swix.insertedOn)) {
+              next(null)
+            } else {
+              next({
+                status: 3000,
+                message: 'Tx time is incorrect'
+              })
+            }
+          } else if (status === 0) {
+            next({
+              status: 3001,
+              message: 'Failed'
+            }, null)
+          }
+        } else {
+          next({
+            status: 3002,
+            message: 'NotFound'
+          })
+        }
+      })
+    }, (next) => {
+      getTxn(txHash, fromSymbol, (error, _tx) => {
+        receipt = _tx;
+
+        if (error) next(error, null)
+        else next(null)
+      })
+    }, (next) => {
+      getDetailsFromTx(receipt, fromSymbol, swix.toAddress, (error, details) => {
+        if (error) next(error, null)
+        else next(null, details)
+      })
+    }, (details, next) => {
+      if (details.toAddress === swix.toAddress) {
+        let queryObject = {
+          swixHash: swixHash
+        }
+
+        let updateObject = {
+          inTxStatus: 'success',
+          inTxHash: txHash,
+          inTxValue: details['amount']
+        }
+
+        swixerDbo.updateSwix(queryObject, updateObject, (error, resp) => {
+          let errorMessage = {
+            message: 'Error in updating swix'
+          }
+
+          if (error) next(errorMessage, null)
+          else next(null, resp)
+        })
+      } else {
+        next({
+          status: 3004,
+          message: 'To address is not Deposit address'
+        })
+      }
+    }
+  ], (error, resp) => {
+
+    let errorMessage = {
+      success: false,
+      message: 'Error in finding tx'
+    }
+
+    if (error) {
+      if (error.status) {
+        let queryObject = {
+          swixHash: swixHash
+        }
+
+        let updateObject = {
+          inTxStatus: error.message,
+          inTxHash: txHash
+        }
+
+        swixerDbo.updateSwix(queryObject, updateObject, (err, resp) => {
+          if (err) {
+            errorMessage.message = 'Error in updating tx details'
+            res.status(400).send(errorMessage)
+          } else {
+            errorMessage.message = error.message
+            res.status(400).send(errorMessage)
+          }
+        })
+      } else {
+        errorMessage.message = error.message
+        res.status(400).send(errorMessage)
+      }
+
+    } else {
+      res.status(200).send({
+        success: true,
+        message: 'details updated successfully'
+      })
+    }
+  })
+}
+
 module.exports = {
   getStatus,
   getPendingSwixes,
   getAverageTransactionCount,
   getActiveSwix,
-  getCompletedSwixes
+  getCompletedSwixes,
+  getTxHashDetails
 };

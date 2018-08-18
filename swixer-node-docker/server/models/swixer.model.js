@@ -68,7 +68,10 @@ let swixDetailsSchema = new mongoose.Schema({
     type: String,
     default: 'Swix added successfully.'
   },
-  txInfos: Array
+  txInfos: Array,
+  inTxHash: String,
+  inTxStatus: String,
+  inTxValue: String
 }, {
   strict: true,
   versionKey: false
