@@ -11,9 +11,23 @@ let insertSwixDetails = (swixDetails, cb) => {
 
 let getPendingSwix = (cb) => {
   SwixDetailsModel.find({
+    receivedValue: {
+      $gt: 0
+    },
+    $or: [{
+        'remainingAmount': {
+          $exists: false
+        }
+      },
+      {
+        'remainingAmount': {
+          $gt: 0
+        }
+      }
+    ],
     remainingAmount: {
       $gt: 0
-    }
+    },
   }, {
     _id: 0,
     fromSymbol: 1,
