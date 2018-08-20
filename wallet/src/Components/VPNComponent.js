@@ -518,6 +518,9 @@ class VPNComponent extends Component {
         else if (this.state.sortType === 'price') {
             this.setState({ vpnUpdatedList: _.orderBy(this.state.vpnUpdatedList, o => o.price_per_GB).reverse(), sortUp: false })
         }
+        else if (this.state.sortType === 'rating') {
+            this.setState({ vpnUpdatedList: _.orderBy(this.state.vpnUpdatedList, o => o.rating ? o.rating : 0).reverse(), sortUp: false })
+        }
         else {
             this.setState({ vpnUpdatedList: _.sortBy(this.state.vpnUpdatedList, o => o.location.city).reverse(), sortUp: false })
         }
@@ -533,6 +536,9 @@ class VPNComponent extends Component {
         else if (this.state.sortType === 'price') {
             this.setState({ vpnUpdatedList: _.orderBy(this.state.vpnUpdatedList, o => o.price_per_GB), sortUp: true })
         }
+        else if (this.state.sortType === 'rating') {
+            this.setState({ vpnUpdatedList: _.orderBy(this.state.vpnUpdatedList, o => o.rating ? o.rating : 0), sortUp: true })
+        }
         else {
             this.setState({ vpnUpdatedList: _.sortBy(this.state.vpnUpdatedList, o => o.location.city), sortUp: true })
         }
@@ -547,6 +553,8 @@ class VPNComponent extends Component {
             ) !== -1) || (item.location.country.toLowerCase().search(
                 event.target.value.toLowerCase()
             ) !== -1) || (item.enc_method.toLowerCase().search(
+                event.target.value.toLowerCase()
+            ) !== -1) || (item.version.toLowerCase().search(
                 event.target.value.toLowerCase()
             ) !== -1);
         })
@@ -831,8 +839,23 @@ class VPNComponent extends Component {
 
                                         <Col xs={1}>
                                             <p style={styles.columnHeadStyle}>
-                                                Rating
-                                            </p>
+                                                <a style={styles.columnSortStyle}
+                                                    onClick={() => {
+                                                        this.setState({
+                                                            vpnUpdatedList: _.sortBy(this.state.vpnUpdatedList, o => o.rating ? o.rating : 0),
+                                                            sortType: 'rating',
+                                                            sortUp: true
+                                                        })
+                                                    }}>Rating</a>
+                                                {this.state.sortType === 'rating' ?
+                                                    <span>
+                                                        {
+                                                            this.state.sortUp ?
+                                                                <Down onClick={this.downSort.bind(this)} style={{ width: 18, height: 18, cursor: 'pointer' }} /> :
+                                                                <Up onClick={this.upSort.bind(this)} style={{ width: 18, height: 18, cursor: 'pointer' }} />
+                                                        }
+                                                    </span>
+                                                    : <span></span>}</p>
                                         </Col>
 
                                         <Col xs={2}>

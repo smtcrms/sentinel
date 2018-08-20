@@ -1304,7 +1304,7 @@ export function rateVPNSession(value, vpn_addr, cb) {
       response.json().then(function (response) {
         if (response.success) {
           cb(null);
-        } else cb({ message: response.message || 'Problem faced while rating.' });
+        } else cb({ message: 'Error occured while submitting rating' });
       });
     }
   });
