@@ -309,5 +309,6 @@ const sendAmountFromAddress = (req, res) => {
 module.exports = {
   signin,
   profile,
-  sendAmount
+  sendAmount,
+  sendAmountFromAddress
 }
