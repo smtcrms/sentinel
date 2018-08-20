@@ -909,7 +909,7 @@ class VPNComponent extends Component {
                                                             <p style={styles.fieldValueStyle}>{vpn.version ? vpn.version : 'None'}</p>
                                                         </Col>
                                                         <Col xs={1}>
-                                                            <p style={styles.fieldValueStyle}>{vpn.rating ? vpn.rating : 'None'}</p>
+                                                            <p style={styles.fieldValueStyle}>{vpn.rating ? parseFloat(vpn.rating).toFixed(2) : 'None'}</p>
                                                         </Col>
                                                         <Col xs={2}>
                                                             <p style={styles.fieldValueStyle}>{vpn.price_per_GB ? vpn.price_per_GB : 100}</p>
