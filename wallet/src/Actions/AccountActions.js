@@ -1574,7 +1574,8 @@ export function connectVPN(account_addr, vpn_addr, cb) {
         var ovpncommand = 'export PATH=$PATH:/usr/local/opt/openvpn/sbin && openvpn ' + OVPN_FILE;
         command = `/usr/bin/osascript -e 'do shell script "${ovpncommand}" with administrator privileges'`
       } else if (remote.process.platform === 'win32') {
-        command = 'resources\\extras\\bin\\openvpn.exe ' + OVPN_FILE;
+        let FILE = SENT_DIR + '\\client.ovpn';
+        command = 'resources\\extras\\bin\\openvpn.exe ' + FILE;
       } else {
         command = 'sudo openvpn ' + OVPN_FILE;
       }
