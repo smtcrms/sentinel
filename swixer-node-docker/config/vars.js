@@ -15,11 +15,15 @@ let decimals = {
   'BNB': 18
 }
 
-let pivxChain = 'https://chainz.cryptoid.info/explorer/tx.raw.dws?coin=pivx&id='
+let algorithm = '';
+let passwd = '';
+let jwtsecret = ''
 
 module.exports = {
   server,
   mongoDb,
   decimals,
-  pivxChain
+  algorithm,
+  passwd,
+  jwtsecret
 };

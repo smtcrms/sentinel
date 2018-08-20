@@ -1,11 +1,6 @@
 let axios = require('axios');
 let gateways = require('../../config/btc/gateways');
 
-let {
-  pivxChain
-} = require('../../config/vars')
-
-
 let getAccount = (coinSymbol, cb) => {
   let url = `${gateways[coinSymbol].server}/address`;
   axios.get(url)

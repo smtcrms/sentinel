@@ -1,10 +1,10 @@
-let accountContoller = require('../controllers/account.controller');
+let accountController = require('../controllers/account.controller');
 let accountValidation = require('../validations/account.validation');
 
 
 module.exports = (server) => {
-  server.post('/account', accountValidation.createAccount, accountContoller.createAccount);
+  server.post('/account', accountValidation.createAccount, accountController.createAccount);
 
-  server.get('/balances', accountContoller.getBalances);
-  server.get('/ethBalance', accountContoller.getETHBalances)
+  server.get('/balances', accountController.getBalances);
+  server.get('/ethBalance', accountController.getETHBalances)
 };
