@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import {
     getVPNList, connectVPN, getVPNUsageData, isOnline, getLatency, disconnectVPN, getVpnHistory,
-    sendError, connectSocks, disconnectSocks, sendUsage, setStartValues, getStartValues
+    sendError, connectSocks, disconnectSocks, sendUsage, setStartValues, getStartValues, rateVPNSession
 } from '../Actions/AccountActions';
 import ZoomIn from 'material-ui/svg-icons/content/add';
 import { Grid, Row, Col } from 'react-flexbox-grid';
@@ -22,6 +22,7 @@ import {
 import clear from 'material-ui/svg-icons/content/clear';
 import Flag from 'react-world-flags';
 import ReactTooltip from 'react-tooltip';
+import { Rating } from 'material-ui-rating';
 let Country = window.require('countrynames');
 var markers = []
 let lang = require('./language');
@@ -72,7 +73,9 @@ class VPNComponent extends Component {
             startDownload: 0,
             startUpload: 0,
             showStatus: false,
-            isPrivate: false
+            isPrivate: false,
+            rateDialog: false,
+            rateValue: 2
         }
         this.handleZoomIn = this.handleZoomIn.bind(this)
         this.handleZoomOut = this.handleZoomOut.bind(this)
@@ -306,7 +309,10 @@ class VPNComponent extends Component {
                     that.props.onChange();
                     that.props.changeTest(false);
                     sendUsage(that.props.local_address, that.state.selectedVPN, null);
-                    that.setState({ selectedVPN: null, usage: null, statusSnack: false, status: false, showStatus: false, openSnack: true, snackMessage: lang[that.props.lang].DisconnectVPN })
+                    that.setState({
+                        usage: null, statusSnack: false, status: false, showStatus: false, rateDialog: true,
+                        openSnack: true, snackMessage: lang[that.props.lang].DisconnectVPN
+                    })
                 }
             });
         }
@@ -320,7 +326,10 @@ class VPNComponent extends Component {
                 else {
                     that.props.onChange();
                     that.props.changeTest(false);
-                    that.setState({ selectedVPN: null, usage: null, statusSnack: false, showStatus: false, isTor: false, status: false, openSnack: true, snackMessage: lang[that.props.lang].DisconnectVPN })
+                    that.setState({
+                        usage: null, statusSnack: false, showStatus: false, isTor: false, status: false, rateDialog: true,
+                        openSnack: true, snackMessage: lang[that.props.lang].DisconnectVPN
+                    })
                 }
             });
         }
@@ -358,7 +367,7 @@ class VPNComponent extends Component {
             })
             downCur = parseInt(bwStats.down);
             upCur = parseInt(bwStats.up);
-            console.log("statas>>>>>>>>>>", bwStats, downCur, upCur)
+            // console.log("statas>>>>>>>>>>", bwStats, downCur, upCur)
             // downCur = parseInt(receivedArr[0]) + parseInt(receivedArr[1]);           
             // let sendOut = execSync('powershell.exe -command \"$stat=Get-NetAdapterStatistics;$stat.SentBytes\"');
             // let sendArr = sendOut.toString().trim().split('\r\n');
@@ -460,6 +469,7 @@ class VPNComponent extends Component {
         this.setState({ showPopUp: false, showPay: false });
     };
 
+
     closeInstruction = () => {
         this.setState({ showInstruct: false });
     }
@@ -472,6 +482,20 @@ class VPNComponent extends Component {
         this.setState({
             openSnack: false
         });
+    };
+
+    rateSession = () => {
+        rateVPNSession(this.state.rateValue, this.state.activeVpn.account_addr, (err) => {
+            if (err) {
+                this.setState({ rateDialog: false, selectedVPN: null, openSnack: true, snackMessage: err.message });
+            } else {
+                this.setState({ rateDialog: false, selectedVPN: null, openSnack: true, snackMessage: 'Rated Successfully' });
+            }
+        })
+    }
+
+    closeRateDialog = () => {
+        this.setState({ rateDialog: false });
     };
 
     payVPN = () => {
@@ -578,6 +602,19 @@ class VPNComponent extends Component {
                 label={lang[language].Pay}
                 primary={true}
                 onClick={this.payVPN.bind(this)}
+            />,
+        ];
+
+        const rateActions = [
+            <FlatButton
+                label={'Not Now'}
+                primary={true}
+                onClick={this.closeRateDialog}
+            />,
+            <FlatButton
+                label={'Submit'}
+                primary={true}
+                onClick={this.rateSession.bind(this)}
             />,
         ];
         return (
@@ -722,7 +759,7 @@ class VPNComponent extends Component {
                                         <Col xs={1}>
                                             <p style={{ fontWeight: 'bold' }}>{lang[language].Flag}</p>
                                         </Col>
-                                        <Col xs={3}>
+                                        <Col xs={2}>
                                             <p style={styles.columnHeadStyle}>
                                                 <a style={styles.columnSortStyle}
                                                     onClick={() => {
@@ -762,7 +799,7 @@ class VPNComponent extends Component {
                                                     </span>
                                                     : <span></span>}</p>
                                         </Col>
-                                        <Col xs={2}>
+                                        <Col xs={1}>
                                             <p style={styles.columnHeadStyle}>
                                                 <a style={styles.columnSortStyle}
                                                     onClick={() => {
@@ -781,9 +818,20 @@ class VPNComponent extends Component {
                                                     </span>
                                                     : <span></span>}</p>
                                         </Col>
-                                        <Col xs={2}>
+                                        <Col xs={1}>
                                             <p style={styles.columnHeadStyle}>
                                                 Algorithm
+                                            </p>
+                                        </Col>
+                                        <Col xs={2}>
+                                            <p style={styles.columnHeadStyle}>
+                                                Version
+                                            </p>
+                                        </Col>
+
+                                        <Col xs={1}>
+                                            <p style={styles.columnHeadStyle}>
+                                                Rating
                                             </p>
                                         </Col>
 
@@ -821,18 +869,24 @@ class VPNComponent extends Component {
                                                         <Col xs={1}>
                                                             <Flag code={Country.getCode(vpn.location.country)} height="16" />
                                                         </Col>
-                                                        <Col xs={3}>
+                                                        <Col xs={2}>
                                                             <p style={styles.fieldValueStyle}>{vpn.location.city}, {vpn.location.country}</p>
                                                         </Col>
                                                         <Col xs={2}>
                                                             <p style={styles.fieldValueStyle}>{(vpn.net_speed.download / (1024 * 1024)).toFixed(2)} Mbps</p>
                                                         </Col>
-                                                        <Col xs={2}>
+                                                        <Col xs={1}>
                                                             <p style={styles.fieldValueStyle}>{vpn.latency ? vpn.latency : 'None'}
                                                                 {vpn.latency ? (vpn.latency === 'Loading...' ? null : ' ms') : null}</p>
                                                         </Col>
-                                                        <Col xs={2}>
+                                                        <Col xs={1}>
                                                             <p style={styles.algoTextStyle}>{vpn.enc_method ? vpn.enc_method : 'None'}</p>
+                                                        </Col>
+                                                        <Col xs={2}>
+                                                            <p style={styles.fieldValueStyle}>{vpn.version ? vpn.version : 'None'}</p>
+                                                        </Col>
+                                                        <Col xs={1}>
+                                                            <p style={styles.fieldValueStyle}>{vpn.rating ? vpn.rating : 'None'}</p>
                                                         </Col>
                                                         <Col xs={2}>
                                                             <p style={styles.fieldValueStyle}>{vpn.price_per_GB ? vpn.price_per_GB : 100}</p>
@@ -1051,6 +1105,20 @@ class VPNComponent extends Component {
                 <ReactTooltip id="copyImage" place="bottom">
                     <span>{lang[language].Copy}</span>
                 </ReactTooltip>
+                <Dialog
+                    title="Rate this session"
+                    titleStyle={{ fontSize: 14, color: 'black', fontWeight: 'bold' }}
+                    actions={rateActions}
+                    modal={true}
+                    open={this.state.rateDialog}
+                    contentStyle={{ width: '30%' }}
+                >
+                    <Rating
+                        value={this.state.rateValue}
+                        max={5}
+                        onChange={(value) => { this.setState({ rateValue: value }) }}
+                    />
+                </Dialog>
             </div >
         )
     }
@@ -1103,11 +1171,11 @@ const styles = {
     algoTextStyle: {
         textAlign: 'center',
         wordBreak: 'break-all',
-        padding: 5,
-        backgroundColor: '#35778a',
-        marginTop: -4,
-        color: 'white',
-        borderRadius: 20,
+        // padding: 5,
+        // backgroundColor: '#35778a',
+        // marginTop: -4,
+        // color: 'white',
+        // borderRadius: 20,
         fontSize: 13
     }
 }

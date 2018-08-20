@@ -1281,6 +1281,35 @@ export function connectSocks(account_addr, vpn_addr, cb) {
   }
 }
 
+export function rateVPNSession(value, vpn_addr, cb) {
+  fetch(B_URL + '/client/vpn/rate', {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'Content-type': 'application/json',
+      'Authorization': localStorage.getItem('access_token')
+    },
+    body: JSON.stringify({
+      vpn_addr: vpn_addr,
+      rating: value,
+      session_name: SESSION_NAME
+    })
+  }).then(function (response) {
+    if (response.status === 401) {
+      getClientToken(localStorage.getItem('authcode'), B_URL, function (err, data) {
+        rateVPNSession(value, vpn_addr, cb);
+      })
+    }
+    else {
+      response.json().then(function (response) {
+        if (response.success) {
+          cb(null);
+        } else cb({ message: response.message || 'Problem faced while rating.' });
+      });
+    }
+  });
+}
+
 export function setStartValues(downVal, upVal) {
   fs.readFile(CONFIG_FILE, 'utf8', function (err, data) {
     if (err) {
