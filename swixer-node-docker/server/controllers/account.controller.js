@@ -13,10 +13,11 @@ let {
 let createAccount = (req, res) => {
   let details = req.body;
   let coinSymbol = details.fromSymbol;
+  let fromSymbol = details.fromSymbol;
   let toSymbol = details.toSymbol;
   let value = details.value;
   let coinType = coins[toSymbol].type
-  
+
   async.waterfall([
     (next) => {
       accountDbo.getAccounts([coinType],
@@ -40,8 +41,11 @@ let createAccount = (req, res) => {
           else {
             let balances = {}
             balances[toSymbol] = lodash.sum(lodash.map(balancesOfAddresses, toSymbol))
+            value /= Math.pow(10, decimals[fromSymbol]);
+            value *= details.rate;
+            value *= Math.pow(10, decimals[toSymbol]);
             if (value > balances[toSymbol]) {
-              let amount = Math.round(balances[toSymbol] / (Math.pow(10, decimals[toSymbol])))
+              let amount = Math.floor(balances[toSymbol] / (Math.pow(10, decimals[toSymbol])))
               next({
                 status: 3000,
                 message: `Insufficient funds in node. please make a txn lesser than ${amount}`
@@ -103,8 +107,11 @@ let createAccount = (req, res) => {
         });
     }
   ], (error, success) => {
-    if (error && error.status !== 3000)
-      error.message = 'Error occured while getting deposit address. Please try again'
+    if (error) {
+      if (error.status !== 3000)
+        error.message = 'Error occured while getting deposit address. Please try again'
+      error.status = 500
+    }
 
     let response = Object.assign({
       success: !error

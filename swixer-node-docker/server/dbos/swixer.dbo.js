@@ -34,7 +34,6 @@ let getPendingSwix = (cb) => {
     toSymbol: 1,
     swixHash: 1,
     txInfos: 1,
-    destinationAddress: 1,
     remainingAmount: 1,
     insertedOn: 1,
     lastUpdateOn: 1,
@@ -190,7 +189,6 @@ let getCompletedSwixes = (cb) => {
     fromSymbol: 1,
     toSymbol: 1,
     swixHash: 1,
-    destinationAddress: 1,
     txInfos: 1,
     receivedValue: 1,
     insertedOn: 1

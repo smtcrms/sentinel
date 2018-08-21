@@ -21,7 +21,7 @@ def get_swixer_nodes_list():
     return list(_list)
 
 
-def get_account(ip, from_symbol, to_symbol, client_address, destination_address, delay_in_seconds,rate,refund_address):
+def get_account(ip, from_symbol, to_symbol, client_address, destination_address, delay_in_seconds,rate,refund_address, amount):
     try:
         url = 'http://{}:3000/account'.format(ip)
         res = requests.post(url, json={
@@ -31,16 +31,19 @@ def get_account(ip, from_symbol, to_symbol, client_address, destination_address,
             'destinationAddress': destination_address,
             'delayInSeconds': delay_in_seconds,
             'rate':rate,
-            'refundAddress':refund_address
+            'refundAddress':refund_address,
+            'value': amount
         })
         res = res.json()
         if res['success']:
-            return {
+            return None, {
                 'swix_hash': res['swixHash'],
                 'address': res['address']
             }
         else:
-            return None
+            return {
+                'message': res['message']
+            }, None
     except Exception as error:
         print(error)
         return None
@@ -171,6 +174,7 @@ class GetSwixDetails(object):
         destination_address = str(req.body['destination_address'])
         refund_address =  str(req.body['refund_address']) if 'refund_address' in req.body else client_address
         delay_in_seconds = int(req.body['delay_in_seconds'])
+        amount = int(req.body['value']) if 'value' in req.body else 0
         from_token = tokens.get_token(from_symbol)
         to_token = tokens.get_token(to_symbol)
         value = 1.0 * (10 ** from_token['decimals'])
@@ -187,12 +191,12 @@ class GetSwixDetails(object):
         else:
             rate = tokens.exchange(from_token, to_token, value, node['service_charge'])
             rate = rate / (1.0 * (10 ** to_token['decimals']))
-            account = get_account(node['ip'], from_symbol, to_symbol, client_address, destination_address,
-                                  delay_in_seconds,rate,refund_address)
+            error, account = get_account(node['ip'], from_symbol, to_symbol, client_address, destination_address,
+                                  delay_in_seconds,rate,refund_address, amount)
             if account is None:
                 message = {
                     'success': False,
-                    'message': 'Error occured while getting account.'
+                    'message':error['message']
                 }
             else:
                 db.swixes.insert_one({

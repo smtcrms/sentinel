@@ -15,7 +15,7 @@ let createAccount = (req, res, next) => {
   });
   let {
     error
-  } = joi.validate(req.body, createAccountSchema);
+  } = joi.validate(req.body, createAccountSchema, { allowUnknown: true });
   if (error) res.status(422).send({
     success: false,
     error
