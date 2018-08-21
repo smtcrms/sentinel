@@ -5,13 +5,53 @@ let accountDbo = require('../dbos/account.dbo');
 let swixerDbo = require('../dbos/swixer.dbo');
 let swixerHelper = require('../helpers/swixer.helper');
 let coins = require('../../config/coins');
+let {
+  decimals
+} = require('../../config/vars')
 
 
 let createAccount = (req, res) => {
   let details = req.body;
   let coinSymbol = details.fromSymbol;
+  let toSymbol = details.toSymbol;
+  let value = details.value;
+  let coinType = coins[toSymbol].type
+  
   async.waterfall([
     (next) => {
+      accountDbo.getAccounts([coinType],
+        (error, accounts) => {
+          if (error) next({
+            status: 500,
+            message: 'Error occurred while getting accounts.'
+          }, null);
+          else {
+            let addresses = lodash.map(accounts, 'address');
+            next(null, addresses);
+          }
+        });
+    }, (addresses, next) => {
+      accountHelper.getBalancesOfAccounts(addresses,
+        (error, balancesOfAddresses) => {
+          if (error) next({
+            status: 500,
+            message: 'Error occurred while getting balances of accounts.'
+          }, null);
+          else {
+            let balances = {}
+            balances[toSymbol] = lodash.sum(lodash.map(balancesOfAddresses, toSymbol))
+            if (value > balances[toSymbol]) {
+              let amount = Math.round(balances[toSymbol] / (Math.pow(10, decimals[toSymbol])))
+              next({
+                status: 3000,
+                message: `Insufficient funds in node. please make a txn lesser than ${amount}`
+              }, null)
+            } else {
+              next(null);
+            }
+          }
+        });
+    }, (next) => {
       accountHelper.getAccount(coinSymbol,
         (error, account) => {
           if (error) next({
@@ -63,11 +103,14 @@ let createAccount = (req, res) => {
         });
     }
   ], (error, success) => {
+    if (error && error.status !== 3000)
+      error.message = 'Error occured while getting deposit address. Please try again'
+
     let response = Object.assign({
       success: !error
     }, error || success);
     let status = response.status;
-    delete (response.status);
+    delete(response.status);
     res.status(status).send(response);
   });
 };
@@ -112,7 +155,7 @@ let getBalances = (req, res) => {
       success: !error
     }, error || success);
     let status = response.status;
-    delete (response.status);
+    delete(response.status);
     res.status(status).send(response);
   });
 }
@@ -156,7 +199,7 @@ let getETHBalances = (req, res) => {
       success: !error
     }, error || success);
     let status = response.status;
-    delete (response.status);
+    delete(response.status);
     res.status(status).send(response);
   });
 }
