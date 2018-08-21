@@ -33,12 +33,12 @@ let getPendingSwix = (cb) => {
     fromSymbol: 1,
     toSymbol: 1,
     swixHash: 1,
-    fromAddress: 1,
-    toAddress: 1,
+    txInfos: 1,
     destinationAddress: 1,
     remainingAmount: 1,
     insertedOn: 1,
-    lastUpdateOn: 1
+    lastUpdateOn: 1,
+    receivedValue: 1
   }, (error, result) => {
     if (error) cb(error, null);
     else cb(null, result || []);
@@ -175,6 +175,8 @@ let getActiveSwix = (cb) => {
     swixHash: 1,
     fromAddress: 1,
     toAddress: 1,
+    txInfos: 1,
+    remainingAmount: 1
   }, (error, activeList) => {
     if (error) cb(error, null)
     else cb(null, activeList)
@@ -188,9 +190,8 @@ let getCompletedSwixes = (cb) => {
     fromSymbol: 1,
     toSymbol: 1,
     swixHash: 1,
-    fromAddress: 1,
-    toAddress: 1,
     destinationAddress: 1,
+    txInfos: 1,
     receivedValue: 1,
     insertedOn: 1
   }, (error, list) => {

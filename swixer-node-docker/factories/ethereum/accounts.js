@@ -15,11 +15,12 @@ let getTransactionCount = (address, cb) => {
     web3.eth.getTransactionCount(address, 'pending', (error, nonce) => {
       if ((err === null) && ((previousNonce === null) || nonce > previousNonce)) {
         redisClient.set(key, nonce);
+        console.log('redis nonce:', previousNonce, 'network nonce', nonce);
         cb(null, nonce);
       } else {
         setTimeout(() => {
           getTransactionCount(address, cb)
-        }, 2000);
+        }, 1 * 60 * 1000);
       }
     })
   });
