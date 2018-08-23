@@ -1,6 +1,5 @@
 import async from "async";
 import { Validation, Node } from "../models";
-import database from "../db/database";
 
 const updateCount = (req, res) => {
   console.log('body', req.body)
@@ -88,6 +87,7 @@ const getBlockedUsers = (req, res) => {
   Validation.find((err, resp) => {
     if (!err) {
       async.each(resp, (item, iterate) => {
+        resp = resp.toObject()
         if (!resp.isBlocked)
           resp.isBlocked = false
       }, () => {

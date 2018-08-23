@@ -1327,7 +1327,6 @@ export default {
   updateNodeInfo,
   updateConnections,
   deRegisterNode,
-  addVpnUsage,
   getDailyDataCount,
   getTotalDataCount,
   getLastDataCount,

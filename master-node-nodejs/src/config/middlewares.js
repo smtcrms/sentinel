@@ -20,11 +20,12 @@ export default app => {
   });
   app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({ extended: true }));
+  
   app.use(cors());
   if (isDev && !isTest) {
-    app.use(morgan('dev'));
-    expressWinston.requestWhitelist.push('body');
-    expressWinston.responseWhitelist.push('body');
+    app.use(morgan('combined'));
+    // expressWinston.requestWhitelist.push('body');
+    // expressWinston.responseWhitelist.push('body');
     // app.use(
     //   expressWinston.logger({
     //     winstonInstance,
