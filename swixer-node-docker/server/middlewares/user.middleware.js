@@ -6,7 +6,6 @@ const autherized = (req, res, next) => {
   let token = req.headers.token
 
   verifyToken(token, (error, user) => {
-    console.log('error', error, user)
     if (!error && user) {
       user = user.data
       if (user.role === 'admin') {

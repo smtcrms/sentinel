@@ -306,9 +306,25 @@ const sendAmountFromAddress = (req, res) => {
   })
 }
 
+const getToken = (req, res) => {
+  try {
+    let token = jwt.getToken(req.user, 'access')
+    res.status(200).send({
+      success: true,
+      accessToken: token
+    })
+  } catch (error) {
+    res.status(400).send({
+      success: false,
+      message: 'Error in getting access token'
+    })
+  }
+}
+
 module.exports = {
   signin,
   profile,
   sendAmount,
-  sendAmountFromAddress
+  sendAmountFromAddress,
+  getToken
 }

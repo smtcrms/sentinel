@@ -34,7 +34,7 @@ let createAccount = (req, res) => {
     }, (addresses, next) => {
       accountHelper.getBalancesOfAccounts(addresses,
         (error, balancesOfAddresses) => {
-          if (error) next({
+          if (error && coinType !== 'BTC') next({
             status: 500,
             message: 'Error occurred while getting balances of accounts.'
           }, null);
@@ -44,11 +44,11 @@ let createAccount = (req, res) => {
             value /= Math.pow(10, decimals[fromSymbol]);
             value *= details.rate;
             value *= Math.pow(10, decimals[toSymbol]);
-            if (value > balances[toSymbol]) {
+            if (coinType !== 'BTC' && value > balances[toSymbol]) {
               let amount = Math.floor(balances[toSymbol] / (Math.pow(10, decimals[toSymbol])))
               next({
                 status: 3000,
-                message: `Insufficient funds in node. please make a txn lesser than ${amount}`
+                message: `Insufficient funds in node. please make a txn lesser than ${amount} ${toSymbol}`
               }, null)
             } else {
               next(null);
