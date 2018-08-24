@@ -20,6 +20,7 @@ import database from '../db/database';
 import {
   REFERRAL_DUMMY
 } from '../config/referral';
+import _ from "lodash";
 
 const getLatency = (url, cb) => {
   const avgLatencyCmd = "ping -c 2 " + url + " | tail -1 | awk '{print $4}' | cut -d '/' -f 2"
@@ -442,17 +443,100 @@ const deRegisterNode = (req, res) => {
   })
 }
 
-/**
- * @api {post} /node/add-usage add the usage of the VPN.
- * @apiName AddVpnUsage
- * @apiGroup NODE
- * @apiParam {String} fromAddr Account address which is used the VPN.
- * @apiParam {String} toAddr Account address whose VPN is.
- * @apiParam {Number} sentBytes Bytes used by the client.
- * @apiParam {Number} sessionDuration Duration of the VPN connection.
- * @apiSuccess {String} txHash Hash of the transaction.
- * @apiSuccess {String} message VPN usage data will be added soon.
- */
+const getDetails = (address, cb) => {
+  let details = null;
+  let errorMessage = {
+    'success': false,
+    'message': 'Error in finding node'
+  }
+
+  async.waterfall([
+    (next) => {
+      Node.aggregate([{
+        $match: {
+          account_addr: address
+        }
+      }, {
+        $project: {
+          node_hash: '$_id',
+          country: '$location.country',
+          rating: 1,
+          joined_on: 1,
+          active_since: '$vpn.init_on'
+        }
+      }], (error, _details) => {
+        if (!error && _details.length > 0) {
+          details = _details[0]
+          details.rating = 'rating' in details ? details.rating : 5
+          next()
+        } else {
+          next(errorMessage, null)
+        }
+      })
+    }, (next) => {
+      EthHelper.getBalances(address, (error, balance) => {
+        if (error) next(errorMessage, null)
+        else {
+          details.earned_tokens = balance['test']['sents']
+          next()
+        }
+      })
+    }
+  ], (error, data) => {
+    if (error) cb(error, null)
+    else cb(null, details)
+  })
+}
+
+const getNodesList = (req, res) => {
+  let errorMessage = {
+    'success': false,
+    'message': 'Error in getting nodes list'
+  };
+  let nodesList = null;
+  let nodeDetailsList = [];
+  async.waterfall([
+    (next) => {
+      Connection.aggregate([{
+        $group: {
+          _id: "$vpn_addr",
+          count: {
+            $sum: 1
+          }
+        }
+      }, {
+        $sort: {
+          count: -1
+        }
+      }], (error, list) => {
+        if (error) next(errorMessage, null)
+        else {
+          nodesList = list;
+          next()
+        }
+      })
+    }, (next) => {
+      async.each(nodesList, (node, iterate) => {
+        getDetails(node['_id'], (error, _details) => {
+          if (!error && _details) {
+            _details.sessions_served = node.count;
+            nodeDetailsList.push(_details);
+          }
+          iterate()
+        })
+      }, () => {
+        nodeDetailsList = nodeDetailsList.sort((a, b) => b.sessions_served - a.sessions_served)
+        next();
+      })
+    }
+  ], (error, resp) => {
+    if (error) res.status(400).send(err);
+    else res.status(200).send({
+      success: true,
+      node_details: nodeDetailsList
+    });
+  })
+}
 //---------------------------------------------------------------------------------------
 
 /**
@@ -1327,6 +1411,7 @@ export default {
   updateNodeInfo,
   updateConnections,
   deRegisterNode,
+  getNodesList,
   getDailyDataCount,
   getTotalDataCount,
   getLastDataCount,

@@ -10,5 +10,6 @@ routes.post('/register', NodeController.registerNode);
 routes.post('/update-nodeinfo', NodeController.updateNodeInfo);
 routes.post('/deregister', NodeController.deRegisterNode);
 routes.post('/update-connections', NodeController.updateConnections);
+routes.get('/list', NodeController.getNodesList);
 
 export default routes;
