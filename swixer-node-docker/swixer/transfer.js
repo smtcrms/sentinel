@@ -41,9 +41,9 @@ let swixTransfer = (toAddress, destinationAddress, totalAmount, coinSymbol, cb) 
 
           let account = lodash.filter(accounts, item => item.address === address)[0];
           let _balances = balances[address];
-          let gas = 41e9 * 60e3;
+          let gas = 41e9 * 100e3;
           if (coinSymbol === 'ETH' && _balances.SENT > 10)
-            gas = 41e9 * 60e3 * 6;
+            gas = 41e9 * 100e3 * 6;
 
           if ((coinType === 'BTC' && _balances[coinSymbol] > 0) && remainingAmount > 0 ||
             (coinType === 'ETH' && _balances.ETH > gas && _balances[coinSymbol] > 0 && remainingAmount > 0)) {

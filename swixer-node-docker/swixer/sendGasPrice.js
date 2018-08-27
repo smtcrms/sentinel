@@ -35,8 +35,8 @@ let sendGasPrice = (destinationAddress, cb) => {
         (address, l1Next) => {
           let account = lodash.filter(accounts, item => item.address === address)[0];
           let _balances = balances[address];
-          if (_balances.ETH > 10 * 41e9 * 61e3) {
-            let value = 5 * 41e9 * 60e3;
+          if (_balances.ETH > 10 * 41e9 * 101e3) {
+            let value = 5 * 41e9 * 100e3;
             transfer(account.privateKey, destinationAddress, value, 'ETH',
               (error, txHash) => {
                 if (txHash) {
