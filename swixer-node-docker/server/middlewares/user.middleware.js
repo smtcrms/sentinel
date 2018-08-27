@@ -18,9 +18,9 @@ const autherized = (req, res, next) => {
         })
       }
     } else {
-      res.status(409).send({
+      res.status(401).send({
         success: false,
-        message: 'Unauthorized'
+        message: 'Unauthenticated'
       })
     }
   })
