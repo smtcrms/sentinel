@@ -1,6 +1,8 @@
 import async from 'async';
 import uuid from 'uuid'
 import axios from 'axios';
+import request from "request";
+import cheerio from "cheerio";
 
 import {
   VpnServiceManager
@@ -15,7 +17,8 @@ import {
 import {
   Node,
   Connection,
-  Device
+  Device,
+  refSession
 } from "../models";
 import {
   BTC_BASED_COINS
@@ -24,6 +27,9 @@ import database from '../db/database';
 import {
   REFERRAL_DUMMY
 } from '../config/referral';
+import {
+  ERC20Manager
+} from '../eth/erc20';
 
 /**
  * @api {get} /client/vpn/list Get all unoccupied VPN servers list.
@@ -257,7 +263,7 @@ const getVpnCredentials = (req, res) => {
           let ip = node.ip;
           let port = 3000;
           let body = {
-            account_addr: accountAddr === REFERRAL_DUMMY ? deviceId : accountAddr,  // Fixes for SLC
+            account_addr: accountAddr === REFERRAL_DUMMY ? deviceId : accountAddr, // Fixes for SLC
             token: token
           };
           let url = 'http://' + ip + ':' + port + '/token';
@@ -528,6 +534,140 @@ const updateConnection = (req, res) => {
   })
 }
 
+const getStats = (req, res) => {
+  let errorMessage = {
+    'success': false,
+    'message': 'Error in getting the stats'
+  }
+  let stats = {
+    'totalTestSent': 2e9 * 1e8
+  }
+  async.waterfall([
+    (next) => {
+      Connection.aggregate([{
+        $group: {
+          _id: '$client_addr'
+        }
+      }, {
+        $group: {
+          _id: null,
+          count: {
+            $sum: 1
+          }
+        },
+      }], (error, resp) => {
+        if (error) {
+          console.log('error is', error)
+          next(errorMessage, null)
+        } else {
+          console.log('resp unique users', resp)
+          resp = resp[0]
+          stats['totalUsers'] = resp['count']
+          next(null)
+        }
+      })
+    }, (next) => {
+      refSession.aggregate([{
+        $group: {
+          _id: '$device_id'
+        }
+      }, {
+        $group: {
+          _id: null,
+          count: {
+            $sum: 1
+          }
+        },
+      }], (error, resp) => {
+        if (error) {
+          console.log('error is', error)
+          next(errorMessage, null)
+        } else {
+          console.log('resp mobile users', resp)
+          resp = resp[0]
+          stats['totalMobileUsers'] = resp['count']
+          next(null)
+        }
+      })
+    }, (next) => {
+      Connection.aggregate([{
+        "$group": {
+          "_id": null,
+          "Total": {
+            "$sum": "$server_usage.down"
+          }
+        }
+      }], (error, resp) => {
+        if (error) {
+          console.log('error is', error)
+          next(errorMessage, null)
+        } else {
+          console.log('resp TotalBandwidthConsumed', resp)
+          resp = resp[0]
+          stats['TotalBandwidthConsumed'] = resp['Total']
+          next()
+        }
+      })
+    }, (next) => {
+      Connection.aggregate([{
+        $group: {
+          _id: null,
+          count: {
+            $sum: 1
+          }
+        }
+      }], (error, resp) => {
+        if (error) {
+          console.log('error is', error)
+          next(errorMessage, null)
+        } else {
+          console.log('resp totalSessions', resp)
+          resp = resp[0]
+          stats['totalSessions'] = resp['count']
+          next()
+        }
+      })
+    }, (next) => {
+      ERC20Manager['rinkeby']['SENT'].getBalance('0xa3f1592d8a09a91a7238f608620ffde7c4b26029', (error, balance) => {
+        if (error) {
+          console.log('error is', error)
+          next(errorMessage, null)
+        } else {
+          balance = parseInt(balance)
+          console.log('balance totalTestSentCirculating', balance)
+          stats['totalTestSentCirculating'] = 2e9 * 1e8 - balance;
+          next();
+        }
+      })
+    }, (next) => {
+      let url = `https://rinkeby.etherscan.io/token/0x29317b796510afc25794e511e7b10659ca18048b`
+      request.get(url, (error, resp, html) => {
+        if (error) {
+          console.log('error is ', error)
+          next(errorMessage, null)
+        } else {
+          try {
+            const $ = cheerio.load(html);
+            let tds = $('#ContentPlaceHolder1_tr_tokenHolders').text()
+            tds = tds.split(' ')
+            tds[0] = tds[0].replace(/\n/g, '')
+            stats['TotalWalletsWithTestSENT'] = parseInt(tds[0].split(':')[1])
+            next(null, stats)
+          } catch (error) {
+            next(errorMessage, null)
+          }
+        }
+      })
+    }
+  ], (error, resp) => {
+    if (error) res.status(400).send(error);
+    else res.status(200).send({
+      success: true,
+      stats: resp
+    })
+  })
+}
+
 export default {
   getVpnsList,
   getSocksList,
@@ -536,5 +676,6 @@ export default {
   payVpnUsage,
   reportPayment,
   getVpnUsage,
-  updateConnection
+  updateConnection,
+  getStats
 }

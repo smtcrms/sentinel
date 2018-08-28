@@ -21,6 +21,9 @@ import {
   REFERRAL_DUMMY
 } from '../config/referral';
 import _ from "lodash";
+import {
+  ERC20Manager
+} from '../eth/erc20';
 
 const getLatency = (url, cb) => {
   const avgLatencyCmd = "ping -c 2 " + url + " | tail -1 | awk '{print $4}' | cut -d '/' -f 2"
@@ -449,9 +452,9 @@ const getDetails = (address, cb) => {
     'success': false,
     'message': 'Error in finding node'
   }
-
   async.waterfall([
     (next) => {
+      let dt1 = Date.now() / 1000;
       Node.aggregate([{
         $match: {
           account_addr: address
@@ -461,23 +464,28 @@ const getDetails = (address, cb) => {
           node_hash: '$_id',
           country: '$location.country',
           rating: 1,
-          joined_on: 1,
-          active_since: '$vpn.init_on'
+          joined_on: {
+            $multiply: ['$joined_on', 1000]
+          },
+          active_since: {
+            $multiply: ['$vpn.init_on', 1000]
+          },
+          _id: 0
         }
       }], (error, _details) => {
         if (!error && _details.length > 0) {
           details = _details[0]
-          details.rating = 'rating' in details ? details.rating : 5
+          details.rating = 'rating' in details ? details.rating : null
           next()
         } else {
           next(errorMessage, null)
         }
       })
     }, (next) => {
-      EthHelper.getBalances(address, (error, balance) => {
+      ERC20Manager['rinkeby']['SENT'].getBalance(address, (error, balance) => {
         if (error) next(errorMessage, null)
         else {
-          details.earned_tokens = balance['test']['sents']
+          details.earned_tokens = parseFloat(balance)
           next()
         }
       })
@@ -504,10 +512,6 @@ const getNodesList = (req, res) => {
             $sum: 1
           }
         }
-      }, {
-        $sort: {
-          count: -1
-        }
       }], (error, list) => {
         if (error) next(errorMessage, null)
         else {
@@ -525,7 +529,7 @@ const getNodesList = (req, res) => {
           iterate()
         })
       }, () => {
-        nodeDetailsList = nodeDetailsList.sort((a, b) => b.sessions_served - a.sessions_served)
+        nodeDetailsList = nodeDetailsList.sort((a, b) => b.sessions_served - a.sessions_served);
         next();
       })
     }
@@ -831,11 +835,11 @@ const getAverageNodesCount = (req, res) => {
         ]
       }
     }
-  }], (err, resp) => {
-    if (err) {
+  }], (error, resp) => {
+    if (error) {
       res.status(400).send({
         'success': false,
-        'err': err
+        'error': error
       })
     } else {
       res.status(200).send({

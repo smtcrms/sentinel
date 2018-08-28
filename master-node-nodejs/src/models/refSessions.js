@@ -13,4 +13,4 @@ let nodeSchema = new Schema({
   'timestamp': Number
 });
 
-export const refSession = mongoose.model('refsession', nodeSchema);
+export const refSession = mongoose.model('ref_session', nodeSchema);
