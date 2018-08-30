@@ -1131,7 +1131,7 @@ export function connectSocks(account_addr, vpn_addr, cb) {
     }
     async function checkNssm() {
       let username = getUserHome();
-      exec(`${username}\\AppData\\Local\\Sentinel\\app-0.0.44\\resources\\extras\\socks5\\service.exe`, function (execErr, execOut, execStd) {
+      exec(`${username}\\AppData\\Local\\Sentinel\\app-0.0.5\\resources\\extras\\socks5\\service.exe`, function (execErr, execOut, execStd) {
         exec(`net start sentinelSocks`, function (stderr, stdout, error) {
           nextStep();
         });
