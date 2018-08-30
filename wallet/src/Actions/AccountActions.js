@@ -1131,7 +1131,7 @@ export function connectSocks(account_addr, vpn_addr, cb) {
     }
     async function checkNssm() {
       let username = getUserHome();
-      exec(`${username}\\AppData\\Local\\Sentinel\\app-0.0.4\\resources\\extras\\socks5\\service.exe`, function (execErr, execOut, execStd) {
+      exec(`${username}\\AppData\\Local\\Sentinel\\app-0.0.44\\resources\\extras\\socks5\\service.exe`, function (execErr, execOut, execStd) {
         exec(`net start sentinelSocks`, function (stderr, stdout, error) {
           nextStep();
         });
@@ -1606,7 +1606,7 @@ export function connectVPN(account_addr, vpn_addr, cb) {
                   if (remote.process.platform === 'win32') {
                     sudo.exec(command, connect,
                       function (error, stdout, stderr) {
-                        console.log('Err...', error, 'Stdout..', stdout, 'Stderr..', stderr)
+                        // console.log('Err...', error, 'Stdout..', stdout, 'Stderr..', stderr)
                         OVPNDelTimer = setTimeout(function () {
                           fs.unlinkSync(OVPN_FILE);
                         }, 5 * 1000);
@@ -1757,8 +1757,14 @@ function getOVPNAndSave(account_addr, vpn_ip, vpn_port, vpn_addr, nonce, cb) {
               }
               else {
                 if (remote.process.platform === 'win32' || remote.process.platform === 'darwin') {
-                  delete (response['node']['vpn']['ovpn'][17]);
-                  delete (response['node']['vpn']['ovpn'][18]);
+                  // delete (response['node']['vpn']['ovpn'][17]);
+                  // delete (response['node']['vpn']['ovpn'][18]);
+
+                  for(var i=15;i<=20;i++){
+                    if(response['node']['vpn']['ovpn'][i].split(' ')[0]==='up' || response['node']['vpn']['ovpn'][i].split(' ')[0]==='down'){
+                      delete (response['node']['vpn']['ovpn'][i]);
+                    }
+                  }
                 }
                 var ovpn = response['node']['vpn']['ovpn'].join('');
                 SESSION_NAME = response['session_name'];
