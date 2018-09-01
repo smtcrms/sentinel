@@ -1098,7 +1098,7 @@ class VPNComponent extends Component {
                         </span>
                         :
                         <span style={{ fontSize: 14, letterSpacing: 1 }}>
-                            OpenVPN Not Installed. Please go to C:\Users"your-user-name"\AppData\Local\Sentinel\app-0.0.5\resources\extras and run openvpn-install-2.3.18-I602-x86_64.exe
+                            OpenVPN Not Installed. Please go to C:\Users"your-user-name"\AppData\Local\Sentinel\app-0.0.51\resources\extras and run openvpn-install-2.3.18-I602-x86_64.exe
                             <br />
                             Just Install Openvpn without changing installation directory.
                         </span>

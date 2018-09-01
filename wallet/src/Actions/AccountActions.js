@@ -893,16 +893,22 @@ export function swapPivx(account_addr, from, to, cb) {
 
 export function getEthTransactionHistory(account_addr, page, cb) {
   try {
+    let network;
     if (localStorage.getItem('config') === 'TEST')
-      ETH_TRANSC_URL = config.test.ethTransUrl
+      network = 'rinkeby'
     else
-      ETH_TRANSC_URL = config.main.ethTransUrl
-    fetch(ETH_TRANSC_URL + account_addr + '&page=' + page + "&offset=10&sort=desc", {
-      method: 'GET',
+      network = 'main'
+    fetch(B_URL + '/client/account/history/eth', {
+      method: 'POST',
       headers: {
         'Accept': 'application/json',
         'Content-type': 'application/json',
-      }
+      },
+      body: JSON.stringify({
+        account_addr: account_addr,
+        network: network,
+        page: page
+      })
     }).then(function (response) {
       response.json().then(function (response) {
         if (response.status === '1') {
@@ -931,16 +937,21 @@ function getOsascriptIDs(cb) {
 
 export function getSentTransactionHistory(account_addr, cb) {
   try {
+    let network;
     if (localStorage.getItem('config') === 'TEST')
-      SENT_TRANSC_URL1 = config.test.sentTransUrl1
+      network = 'rinkeby'
     else
-      SENT_TRANSC_URL1 = config.main.sentTransUrl1
-    fetch(SENT_TRANSC_URL1 + account_addr + SENT_TRANSC_URL2 + account_addr, {
-      method: 'GET',
+      network = 'main'
+    fetch(B_URL + '/client/account/history/sent', {
+      method: 'POST',
       headers: {
         'Accept': 'application/json',
         'Content-type': 'application/json',
-      }
+      },
+      body: JSON.stringify({
+        account_addr: account_addr,
+        network: network
+      })
     }).then(function (response) {
       response.json().then(function (response) {
         if (response.status === '1') {
@@ -1158,7 +1169,7 @@ export function connectSocks(account_addr, vpn_addr, cb) {
     }
     async function checkNssm() {
       let username = getUserHome();
-      exec(`${username}\\AppData\\Local\\Sentinel\\app-0.0.5\\resources\\extras\\socks5\\service.exe`, function (execErr, execOut, execStd) {
+      exec(`${username}\\AppData\\Local\\Sentinel\\app-0.0.51\\resources\\extras\\socks5\\service.exe`, function (execErr, execOut, execStd) {
         exec(`net start sentinelSocks`, function (stderr, stdout, error) {
           nextStep();
         });
