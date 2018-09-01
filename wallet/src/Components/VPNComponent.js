@@ -521,6 +521,12 @@ class VPNComponent extends Component {
         else if (this.state.sortType === 'rating') {
             this.setState({ vpnUpdatedList: _.orderBy(this.state.vpnUpdatedList, o => o.rating ? o.rating : 0).reverse(), sortUp: false })
         }
+        else if (this.state.sortType === 'algorithm') {
+            this.setState({ vpnUpdatedList: _.orderBy(this.state.vpnUpdatedList, o => o.enc_method ? o.enc_method : null).reverse(), sortUp: false })
+        }
+        else if (this.state.sortType === 'version') {
+            this.setState({ vpnUpdatedList: _.orderBy(this.state.vpnUpdatedList, o => o.version ? o.version : null).reverse(), sortUp: false })
+        }
         else {
             this.setState({ vpnUpdatedList: _.sortBy(this.state.vpnUpdatedList, o => o.location.city).reverse(), sortUp: false })
         }
@@ -538,6 +544,12 @@ class VPNComponent extends Component {
         }
         else if (this.state.sortType === 'rating') {
             this.setState({ vpnUpdatedList: _.orderBy(this.state.vpnUpdatedList, o => o.rating ? o.rating : 0), sortUp: true })
+        }
+        else if (this.state.sortType === 'algorithm') {
+            this.setState({ vpnUpdatedList: _.orderBy(this.state.vpnUpdatedList, o => o.enc_method ? o.enc_method : null), sortUp: true })
+        }
+        else if (this.state.sortType === 'version') {
+            this.setState({ vpnUpdatedList: _.orderBy(this.state.vpnUpdatedList, o => o.version ? o.version : null), sortUp: true })
         }
         else {
             this.setState({ vpnUpdatedList: _.sortBy(this.state.vpnUpdatedList, o => o.location.city), sortUp: true })
@@ -809,7 +821,7 @@ class VPNComponent extends Component {
                                         </Col>
                                         <Col xs={1}>
                                             <p style={styles.columnHeadStyle}>
-                                                <a style={styles.columnSortStyle}
+                                                <a style={styles.columnSortMargin}
                                                     onClick={() => {
                                                         this.setState({
                                                             vpnUpdatedList: _.orderBy(this.state.vpnUpdatedList, o => o.latency),
@@ -828,18 +840,50 @@ class VPNComponent extends Component {
                                         </Col>
                                         <Col xs={1}>
                                             <p style={styles.columnHeadStyle}>
-                                                Algorithm
+                                                <a style={styles.columnSortStyle}
+                                                    onClick={() => {
+                                                        this.setState({
+                                                            vpnUpdatedList: _.sortBy(this.state.vpnUpdatedList, o => o.enc_method ? o.enc_method : null),
+                                                            sortType: 'algorithm',
+                                                            sortUp: true
+                                                        })
+                                                    }}>Algorithm</a>
+                                                {this.state.sortType === 'algorithm' ?
+                                                    <span>
+                                                        {
+                                                            this.state.sortUp ?
+                                                                <Down onClick={this.downSort.bind(this)} style={{ width: 18, height: 18, cursor: 'pointer' }} /> :
+                                                                <Up onClick={this.upSort.bind(this)} style={{ width: 18, height: 18, cursor: 'pointer' }} />
+                                                        }
+                                                    </span>
+                                                    : <span></span>}
                                             </p>
                                         </Col>
                                         <Col xs={2}>
                                             <p style={styles.columnHeadStyle}>
-                                                Version
+                                            <a style={styles.columnSortStyle}
+                                                    onClick={() => {
+                                                        this.setState({
+                                                            vpnUpdatedList: _.sortBy(this.state.vpnUpdatedList, o => o.version ? o.version : null),
+                                                            sortType: 'version',
+                                                            sortUp: true
+                                                        })
+                                                    }}>Version</a>
+                                                {this.state.sortType === 'version' ?
+                                                    <span>
+                                                        {
+                                                            this.state.sortUp ?
+                                                                <Down onClick={this.downSort.bind(this)} style={{ width: 18, height: 18, cursor: 'pointer' }} /> :
+                                                                <Up onClick={this.upSort.bind(this)} style={{ width: 18, height: 18, cursor: 'pointer' }} />
+                                                        }
+                                                    </span>
+                                                    : <span></span>}
                                             </p>
                                         </Col>
 
                                         <Col xs={1}>
                                             <p style={styles.columnHeadStyle}>
-                                                <a style={styles.columnSortStyle}
+                                                <a style={styles.columnSortMargin}
                                                     onClick={() => {
                                                         this.setState({
                                                             vpnUpdatedList: _.sortBy(this.state.vpnUpdatedList, o => o.rating ? o.rating : 0),
@@ -890,7 +934,15 @@ class VPNComponent extends Component {
                                                 <ListItem primaryText={
                                                     <Row>
                                                         <Col xs={1}>
-                                                            <Flag code={Country.getCode(vpn.location.country)} height="16" />
+                                                            {vpn.location ?
+                                                                ('country' in vpn.location ?
+                                                                    vpn.location.country ?
+                                                                        <Flag code={Country.getCode(vpn.location.country)} height="16" />
+                                                                        : null
+                                                                    : null
+                                                                )
+                                                                : null
+                                                            }
                                                         </Col>
                                                         <Col xs={2}>
                                                             <p style={styles.fieldValueStyle}>{vpn.location.city}, {vpn.location.country}</p>
@@ -1190,6 +1242,11 @@ const styles = {
     columnSortStyle: {
         color: '#373a3c',
         cursor: 'pointer'
+    },
+    columnSortMargin:{
+        color: '#373a3c',
+        cursor: 'pointer',
+        marginLeft:-20
     },
     algoTextStyle: {
         textAlign: 'center',
