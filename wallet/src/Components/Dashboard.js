@@ -3,7 +3,7 @@ import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import { Tabs, Tab } from 'material-ui';
 import SendComponent from './SendComponent';
 import Header from './Header';
-import { getEthBalance, getSentBalance, getAccount, getVPNdetails, getVPNConnectedData, sendError, getMasterUrl } from '../Actions/AccountActions';
+import { getLocalBalance, getAccount, getVPNdetails, getVPNConnectedData, sendError, getMasterUrl } from '../Actions/AccountActions';
 import History from './History';
 import ReceiveComponent from './ReceiveComponent';
 import VPNComponent from './VPNComponent';
@@ -65,13 +65,10 @@ class Dashboard extends Component {
   }
 
 
-  getUserEthBalance() {
+  getUserBalance() {
     let that = this;
-    getEthBalance(this.state.local_address, (err, ethBalance) => {
-      if (err) { }
-      else {
-        that.setState({ ethBalance })
-      }
+    getLocalBalance(this.state.local_address, (ethBalance, sentBalance) => {
+      that.setState({ ethBalance, sentBalance })
     })
   }
 
@@ -85,16 +82,6 @@ class Dashboard extends Component {
 
   getSwapHash = (txHash) => {
     this.setState({ swapHash: txHash })
-  }
-
-  getUserSentBalance() {
-    let that = this;
-    getSentBalance(this.state.local_address, (err, sentBalance) => {
-      if (err) { }
-      else {
-        that.setState({ sentBalance })
-      }
-    })
   }
 
   getVPNapi = () => {
@@ -159,8 +146,7 @@ class Dashboard extends Component {
       this.setState({ isTest: value, value: 'send' })
     else
       this.setState({ isTest: value })
-    this.getUserEthBalance();
-    this.getUserSentBalance();
+    this.getUserBalance();
   }
 
   onSockChange = (value) => {
@@ -183,9 +169,7 @@ class Dashboard extends Component {
     let that = this;
     if (!this.state.isGetBalanceCalled) {
       setInterval(function () {
-
-        that.getUserEthBalance();
-        that.getUserSentBalance();
+        that.getUserBalance();
       }, 5000);
 
       this.setState({ isGetBalanceCalled: true });

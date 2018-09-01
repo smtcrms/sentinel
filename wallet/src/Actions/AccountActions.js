@@ -704,6 +704,33 @@ export function getEthBalance(data, cb) {
   }
 }
 
+export function getLocalBalance(address, cb) {
+  fetch(B_URL + '/client/account/balance', {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'Content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      account_addr: address
+    })
+  }).then(function (response) {
+    response.json().then(function (response) {
+      let ethBalance, sentBalance;
+      if (localStorage.getItem('config') === 'TEST') {
+        ethBalance = response['balances']['rinkeby']['eths'] ? response['balances']['rinkeby']['eths'] / (10 ** 18) : null;
+        sentBalance = response['balances']['rinkeby']['sents'] ? response['balances']['rinkeby']['sents'] / (10 ** 8) : null;
+        cb(ethBalance, sentBalance);
+      }
+      else {
+        ethBalance = response['balances']['main']['eths'] ? response['balances']['main']['eths'] / (10 ** 18) : null;
+        sentBalance = response['balances']['main']['sents'] ? response['balances']['main']['sents'] / (10 ** 8) : null;
+        cb(ethBalance, sentBalance);
+      }
+    });
+  });
+}
+
 export function getSentBalance(data, cb) {
   try {
     if (localStorage.getItem('config') === 'TEST')
@@ -1760,8 +1787,8 @@ function getOVPNAndSave(account_addr, vpn_ip, vpn_port, vpn_addr, nonce, cb) {
                   // delete (response['node']['vpn']['ovpn'][17]);
                   // delete (response['node']['vpn']['ovpn'][18]);
 
-                  for(var i=15;i<=20;i++){
-                    if(response['node']['vpn']['ovpn'][i].split(' ')[0]==='up' || response['node']['vpn']['ovpn'][i].split(' ')[0]==='down'){
+                  for (var i = 15; i <= 20; i++) {
+                    if (response['node']['vpn']['ovpn'][i].split(' ')[0] === 'up' || response['node']['vpn']['ovpn'][i].split(' ')[0] === 'down') {
                       delete (response['node']['vpn']['ovpn'][i]);
                     }
                   }
