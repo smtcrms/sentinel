@@ -11,6 +11,7 @@ import { SwixerNodes } from "./swixer.nodes";
 import { Swixes } from "./swixes";
 import { Device } from "./devices";
 import { refSession } from "./refSessions";
+import { Active } from "./active";
 
 export {
   Connection,
@@ -25,5 +26,6 @@ export {
   SwixerNodes,
   Swixes,
   Device,
-  refSession
+  refSession,
+  Active
 }

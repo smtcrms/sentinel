@@ -226,27 +226,49 @@ const getVpnSessionCount = (accountAddr, cb) => {
 }
 
 const getLatestVpnUsage = (accountAddr, cb) => {
-  getVpnSessionCount(accountAddr, (err, sessionsCount) => {
-    if (!err && sessionsCount > 0) {
-      getEncodedSessionId(accountAddr, sessionsCount - 1, (sessionId) => {
-        VpnServiceManager.getVpnUsage(accountAddr, sessionId, (err, _usage) => {
-          if (!err) {
-            let usage = {
-              'id': sessionId,
-              'account_addr': _usage[0].toString().toLowerCase(),
-              'received_bytes': _usage[1],
-              'session_duration': _usage[2],
-              'amount': _usage[3],
-              'timestamp': _usage[4],
-              'is_paid': _usage[5]
-            }
-            cb(null, usage)
-          } else {
-            cb(err, null)
+  let sessionsCount = null;
+  let errorMessage = {
+    success: false,
+    message: 'Error in getting vpn usage'
+  };
+  let sessionId = null;
+
+  async.waterfall([
+    (next) => {
+      getVpnSessionCount(accountAddr, (err, _sessionsCount) => {
+        if (err) {
+          next(errorMessage, null)
+        } else {
+          sessionsCount = _sessionsCount;
+          next();
+        }
+      })
+    }, (next) => {
+      getEncodedSessionId(accountAddr, sessionsCount - 1, (_sessionId) => {
+        sessionId = _sessionId;
+        next();
+      })
+    }, (next) => {
+      VpnServiceManager.getVpnUsage(accountAddr, sessionId, (err, _usage) => {
+        if (!err) {
+          let usage = {
+            'id': sessionId,
+            'account_addr': _usage[0].toString().toLowerCase(),
+            'received_bytes': _usage[1],
+            'session_duration': _usage[2],
+            'amount': _usage[3],
+            'timestamp': _usage[4],
+            'is_paid': _usage[5]
           }
-        })
+          next(null, usage)
+        } else {
+          next(err, null)
+        }
       })
     }
+  ], (error, resp) => {
+    if (error) cb(error, null)
+    else cb(null, resp)
   })
 }
 
@@ -260,6 +282,7 @@ const getVpnUsage = async (accountAddr, cb) => {
     },
     'sessions': []
   }
+
   VpnServiceManager.getVpnSessionCount(accountAddr, (err, sessions) => {
     if (!err) {
       async.times(sessions, (index, next) => {
@@ -358,7 +381,7 @@ const addVpnUsage = (fromAddr, toAddr, sentBytes, sessionDuration, amount, timeS
 
   async.waterfall([
     (next) => {
-      getVpnSessionCount(toAddr, (err, sessionsCount) => {  //toAddr: client account address
+      getVpnSessionCount(toAddr, (err, sessionsCount) => { //toAddr: client account address
         if (!err) {
           getEncodedSessionId(toAddr, sessionsCount, (sessId) => {
             sessionId = sessId;

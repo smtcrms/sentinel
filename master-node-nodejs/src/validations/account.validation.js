@@ -15,7 +15,7 @@ const validateCreateAccount = (req, res, next) => {
 
 const getBalance = (req, res, next) => {
   let getBalanceSchema = joi.object().keys({
-    accountAddr: joi.string().regex(/^0x[a-zA-Z0-9]{40}$/).required()
+    account_addr: joi.string().regex(/^0x[a-zA-Z0-9]{40}$/).required()
   })
   let validation = utils.validate(req.body, getBalanceSchema);
   if (validation.isValid) {
@@ -27,7 +27,8 @@ const getBalance = (req, res, next) => {
 
 const rawTransaction = (req, res, next) => {
   let rawTransactionSchema = joi.object().keys({
-    tx_data: joi.string().required()
+    tx_data: joi.string().required(),
+    net: joi.string().required()
   })
   let validation = utils.validate(req.body, rawTransactionSchema);
   if (validation.isValid) {

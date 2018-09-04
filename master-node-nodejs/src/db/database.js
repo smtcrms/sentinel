@@ -10,7 +10,13 @@ import {
 let pass = encodeURIComponent(MONGO_PASS)
 let host = MONGO_HOST
 let user = MONGO_USER
-let url = "mongodb://" + user + ":" + pass.toString() + "@" + host + ":27017/sentinel";
+const isTest = process.env.NODE_ENV === 'test';
+// let url = `mongodb://localhost:27017/sentinel`;
+let url = `mongodb://${user}:${pass.toString()}@${host}:27017/sentinel`;
+if (isTest) {
+  url = `mongodb://localhost:27017/sentinel`;
+  host = 'localhost';
+}
 
 export const dbo = () => {
   mongoose.connect(url, {
@@ -22,7 +28,7 @@ export const dbo = () => {
       console.log(
         chalk.green.bold(
           `
-        MongoDB connected Successfully`
+        MongoDB connected Successfully`, host
         )
       );
     }

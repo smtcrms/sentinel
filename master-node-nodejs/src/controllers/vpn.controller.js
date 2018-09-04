@@ -84,7 +84,7 @@ const getVpnsList = (req, res) => {
         if (obj.price_per_gb) {
           obj.price_per_GB = obj.price_per_gb
         }
-        obj.price_per_gb = undefined;
+        delete obj.price_per_gb;
         list.push(obj);
         iterate();
       }, () => {
@@ -118,7 +118,7 @@ const getSocksList = (req, res) => {
         if (obj.price_per_gb) {
           obj.price_per_GB = obj.price_per_gb
         }
-        obj.price_per_gb = undefined;
+        delete obj.price_per_gb;
         list.push(obj);
         iterate();
       }, () => {
@@ -183,7 +183,7 @@ const getCurrentVpnUsage = (req, res) => {
  */
 
 const getVpnCredentials = (req, res) => {
-  let accountAddr = account_addr in req.body ? req.body['account_addr'] : REFERRAL_DUMMY
+  let accountAddr = 'account_addr' in req.body ? req.body['account_addr'] : REFERRAL_DUMMY
   let vpnAddr = req.body['vpn_addr'];
   let deviceId = 'device_id' in req.body ? req.body['device_id'] : null
 
@@ -206,27 +206,25 @@ const getVpnCredentials = (req, res) => {
           } else if (dueAmount <= 0) {
             if (vpnAddr) {
               Node.findOne({
-                  'account_addr': vpnAddr,
-                  'vpn.status': 'up'
-                }, {
-                  '_id': 0,
-                  'token': 0
-                },
-                (err, node) => {
-                  if (err) next(err, null);
-                  else next(null, node);
-                })
+                'account_addr': vpnAddr,
+                'vpn.status': 'up'
+              }, {
+                '_id': 0,
+                'token': 0
+              }, (err, node) => {
+                if (err) next(err, null);
+                else next(null, node);
+              })
             } else {
               Node.findOne({
-                  'vpn.status': 'up'
-                }, {
-                  '_id': 0,
-                  'token': 0
-                },
-                (err, node) => {
-                  if (err) next(err, null);
-                  else next(null, node);
-                })
+                'vpn.status': 'up'
+              }, {
+                '_id': 0,
+                'token': 0
+              }, (err, node) => {
+                if (err) next(err, null);
+                else next(null, node);
+              })
             }
           } else {
             next({
@@ -266,7 +264,8 @@ const getVpnCredentials = (req, res) => {
             account_addr: accountAddr === REFERRAL_DUMMY ? deviceId : accountAddr, // Fixes for SLC
             token: token
           };
-          let url = 'http://' + ip + ':' + port + '/token';
+          let url = `http://${ip}:${port}/token`
+
           try {
             axios.post(url, JSON.stringify(body))
               .then((resp) => {
@@ -321,11 +320,8 @@ const payVpnUsage = (req, res) => {
   let net = req.body['net']
   let fromAddr = req.body['from_addr']
   let amount = 'amount' in req.body ? req.body['amount'] : null
-  let sessionId = 'session_id' in req.body ? req.body['session_id'] : null
+  let sessionId = 'session_id' in req.body ? req.body['session_id'].toString() : null
   let deviceId = 'device_id' in req.body ? req.body['device_id'] : null
-
-  if (sessionId)
-    sessionId = sessionId.toString();
 
   EthHelper.payVpnSession(fromAddr, amount, sessionId, net, txData, paymentType, deviceId, (errors, txHashes) => {
     if (errors.length > 0) {
@@ -359,7 +355,7 @@ const payVpnUsage = (req, res) => {
 const reportPayment = (req, res) => {
   let fromAddr = req.body['from_addr']
   let amount = parseInt(req.body['amount'])
-  let sessionId = parseInt(req.body['session_id'])
+  let sessionId = req.body['session_id']
 
   EthHelper.getValidNonce(COINBASE_ADDRESS, 'rinkeby', (nonce) => {
     VpnServiceManager.payVpnSession(fromAddr, amount, sessionId, nonce, (error, txHash) => {
@@ -557,10 +553,8 @@ const getStats = (req, res) => {
         },
       }], (error, resp) => {
         if (error) {
-          console.log('error is', error)
           next(errorMessage, null)
         } else {
-          console.log('resp unique users', resp)
           resp = resp[0]
           stats['totalUsers'] = resp['count']
           next(null)
@@ -580,13 +574,16 @@ const getStats = (req, res) => {
         },
       }], (error, resp) => {
         if (error) {
-          console.log('error is', error)
           next(errorMessage, null)
         } else {
-          console.log('resp mobile users', resp)
-          resp = resp[0]
-          stats['totalMobileUsers'] = resp['count']
-          next(null)
+          if (resp.length == 0) {
+            stats['totalMobileUsers'] = 0;
+            next(null)
+          } else {
+            resp = resp[0]
+            stats['totalMobileUsers'] = resp['count']
+            next(null)
+          }
         }
       })
     }, (next) => {
@@ -599,10 +596,8 @@ const getStats = (req, res) => {
         }
       }], (error, resp) => {
         if (error) {
-          console.log('error is', error)
           next(errorMessage, null)
         } else {
-          console.log('resp TotalBandwidthConsumed', resp)
           resp = resp[0]
           stats['TotalBandwidthConsumed'] = resp['Total']
           next()
@@ -618,10 +613,8 @@ const getStats = (req, res) => {
         }
       }], (error, resp) => {
         if (error) {
-          console.log('error is', error)
           next(errorMessage, null)
         } else {
-          console.log('resp totalSessions', resp)
           resp = resp[0]
           stats['totalSessions'] = resp['count']
           next()
@@ -630,11 +623,9 @@ const getStats = (req, res) => {
     }, (next) => {
       ERC20Manager['rinkeby']['SENT'].getBalance('0xa3f1592d8a09a91a7238f608620ffde7c4b26029', (error, balance) => {
         if (error) {
-          console.log('error is', error)
           next(errorMessage, null)
         } else {
           balance = parseInt(balance)
-          console.log('balance totalTestSentCirculating', balance)
           stats['totalTestSentCirculating'] = 2e9 * 1e8 - balance;
           next();
         }
@@ -643,7 +634,6 @@ const getStats = (req, res) => {
       let url = `https://rinkeby.etherscan.io/token/0x29317b796510afc25794e511e7b10659ca18048b`
       request.get(url, (error, resp, html) => {
         if (error) {
-          console.log('error is ', error)
           next(errorMessage, null)
         } else {
           try {

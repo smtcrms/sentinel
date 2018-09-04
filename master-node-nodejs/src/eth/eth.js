@@ -22,16 +22,21 @@ class ETHManager {
         keystoreData: keystoreData
       };
       cb(null, accountDetails);
-    }
-    catch (error) {
-      cb({ 'code': 101, 'error': error }, null);
+    } catch (error) {
+      cb({
+        'code': 101,
+        'error': error
+      }, null);
     }
   }
   getPrivateKey(keystoreData, password, cb) {
     let keyStore = JSON.parse(keystoreData);
     keythereum.recover(password, keyStore, (err, privateKey) => {
       if (err)
-        cb({ 'code': 102, 'error': err }, null);
+        cb({
+          'code': 102,
+          'error': err
+        }, null);
       else
         cb(null, privateKey);
     });
@@ -41,15 +46,20 @@ class ETHManager {
       const wallet = Wallet.fromPrivateKey(privateKey);
       const address = wallet.getAddressString();
       cb(null, address);
-    }
-    catch (error) {
-      cb({ 'code': 104, 'error': error }, null);
+    } catch (error) {
+      cb({
+        'code': 104,
+        'error': error
+      }, null);
     }
   }
   getBalance(accountAddr, cb) {
     this.web3.eth.getBalance(accountAddr, (err, balance) => {
       if (err)
-        cb({ 'code': 104, 'error': err }, null);
+        cb({
+          'code': 104,
+          'error': err
+        }, null);
       else
         cb(null, balance);
     });
@@ -57,7 +67,10 @@ class ETHManager {
   getTransactionCount(accountAddr, cb) {
     this.web3.eth.getTransactionCount(accountAddr, 'pending', (err, txCount) => {
       if (err)
-        cb({ 'code': 105, 'error': err }, null);
+        cb({
+          'code': 105,
+          'error': err
+        }, null);
       else
         cb(null, txCount);
     });
@@ -66,34 +79,50 @@ class ETHManager {
     txData = txData.toString();
     this.web3.eth.sendRawTransaction(txData, (err, txHash) => {
       if (err)
-        cb({ 'code': 106, 'error': err }, null);
+        cb({
+          'code': 106,
+          'error': err
+        }, null);
       else
         cb(null, txHash);
     });
   }
   transferAmount(fromAddr, toAddr, amount, privateKey, cb) {
-    let rawTx = {
-      nonce: this.web3.eth.getTransactionCount(fromAddr),
-      gasPrice: this.web3.toHex(10*1e9),
-      gasLimit: this.web3.toHex(500000),
-      to: toAddr,
-      value: amount,
-      data: ''
-    };
-    let tx = new Tx(rawTx);
-    tx.sign(Buffer.from(privateKey, 'hex'));
-    let serializedTx = tx.serialize();
-    this.web3.eth.sendRawTransaction('0x' + serializedTx.toString('hex'), (err, txHash) => {
-      if (err)
-        cb({ 'code': 107, 'error': err }, null);
-      else
-        cb(null, txHash);
-    });
+    try {
+      let rawTx = {
+        nonce: this.web3.eth.getTransactionCount(fromAddr),
+        gasPrice: this.web3.toHex(10 * 1e9),
+        gasLimit: this.web3.toHex(500000),
+        to: toAddr,
+        value: amount,
+        data: ''
+      };
+      let tx = new Tx(rawTx);
+      tx.sign(Buffer.from(privateKey, 'hex'));
+      let serializedTx = tx.serialize();
+      this.web3.eth.sendRawTransaction('0x' + serializedTx.toString('hex'), (err, txHash) => {
+        if (err)
+          cb({
+            'code': 107,
+            'error': err
+          }, null);
+        else
+          cb(null, txHash);
+      });
+    } catch (error) {
+      cb({
+        code: 107,
+        error: error
+      })
+    }
   }
   getTransactionReceipt(txHash, cb) {
     this.web3.eth.getTransactionReceipt(txHash, (err, receipt) => {
       if (err)
-        cb({ 'code': 108, 'error': err }, null);
+        cb({
+          'code': 108,
+          'error': err
+        }, null);
       else
         cb(null, receipt);
     });
@@ -101,7 +130,10 @@ class ETHManager {
   getTransaction(txHash, cb) {
     this.web3.eth.getTransaction(txHash, (err, receipt) => {
       if (err)
-        cb({ 'code': 109, 'error': err }, null);
+        cb({
+          'code': 109,
+          'error': err
+        }, null);
       else
         cb(null, receipt);
     });
@@ -114,4 +146,3 @@ let eth_manager = {
 }
 
 export const Eth_manager = eth_manager;
-

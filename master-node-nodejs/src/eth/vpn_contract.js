@@ -18,37 +18,47 @@ class VpnService_Manager {
     this.contract = net.web3.eth.contract(abi).at(address);
   }
   async payVpnSession(accountAddr, amount, sessionId, nonce, cb) {
-    let rawTx = {
-      nonce: nonce,
-      gasPrice: this.net.web3.toHex(this.net.web3.eth.gasPrice),
-      gasLimit: this.net.web3.toHex(500000),
-      to: this.address,
-      value: '0x0',
-      data: this.contract.payVpnSession.getData(accountAddr, amount, sessionId)
-    };
-    let tx = new Tx(rawTx);
-    tx.sign(Buffer.from(COINBASE_PRIVATE_KEY, 'hex'));
-    let serializedTx = tx.serialize();
-    this.net.web3.eth.sendRawTransaction('0x' + serializedTx.toString('hex'), (err, txHash) => {
-      cb(err, txHash);
-    });
+    try {
+      let rawTx = {
+        nonce: nonce,
+        gasPrice: this.net.web3.toHex(this.net.web3.eth.gasPrice),
+        gasLimit: this.net.web3.toHex(500000),
+        to: this.address,
+        value: '0x0',
+        data: this.contract.payVpnSession.getData(accountAddr, amount, sessionId)
+      };
+      let tx = new Tx(rawTx);
+      tx.sign(Buffer.from(COINBASE_PRIVATE_KEY, 'hex'));
+      let serializedTx = tx.serialize();
+      this.net.web3.eth.sendRawTransaction('0x' + serializedTx.toString('hex'), (err, txHash) => {
+        cb(err, txHash);
+      });
+    } catch (error) {
+      cb(error, null);
+    }
   }
   setInitialPayment(accountAddr, nonce, cb) {
-    let isPayed = true
-    let rawTx = {
-      nonce: nonce,
-      gasPrice: this.net.web3.toHex(this.net.web3.eth.gasPrice),
-      gasLimit: this.net.web3.toHex(500000),
-      to: this.address,
-      value: '0x0',
-      data: this.contract.setInitialPaymentStatusOf.getData(accountAddr, isPayed)
-    };
-    let tx = new Tx(rawTx);
-    tx.sign(Buffer.from(COINBASE_PRIVATE_KEY, 'hex'));
-    let serializedTx = tx.serialize();
-    this.net.web3.eth.sendRawTransaction('0x' + serializedTx.toString('hex'), (err, txHash) => {
-      cb(err, txHash);
-    });
+    try {
+
+
+      let isPayed = true
+      let rawTx = {
+        nonce: nonce,
+        gasPrice: this.net.web3.toHex(this.net.web3.eth.gasPrice),
+        gasLimit: this.net.web3.toHex(500000),
+        to: this.address,
+        value: '0x0',
+        data: this.contract.setInitialPaymentStatusOf.getData(accountAddr, isPayed)
+      };
+      let tx = new Tx(rawTx);
+      tx.sign(Buffer.from(COINBASE_PRIVATE_KEY, 'hex'));
+      let serializedTx = tx.serialize();
+      this.net.web3.eth.sendRawTransaction('0x' + serializedTx.toString('hex'), (err, txHash) => {
+        cb(err, txHash);
+      });
+    } catch (error) {
+      cb(error, null)
+    }
   }
   getDueAmount(accountAddr, cb) {
     this.contract.getDueAmountOf(accountAddr, {
@@ -78,9 +88,9 @@ class VpnService_Manager {
     this.contract.getVpnUsageOf(accountAddr, index, {
       from: COINBASE_ADDRESS
     }, (err, usage) => {
-      if(err)
+      if (err)
         cb(err, null)
-      else 
+      else
         cb(null, usage);
     });
   }

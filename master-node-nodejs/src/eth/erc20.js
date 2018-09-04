@@ -1,6 +1,11 @@
 import Tx from 'ethereumjs-tx'
-import { Eth_manager } from './eth'
-import { MAIN_TOKENS, RINKEBY_TOKENS } from '../config/tokens';
+import {
+  Eth_manager
+} from './eth'
+import {
+  MAIN_TOKENS,
+  RINKEBY_TOKENS
+} from '../config/tokens';
 
 class ERC20_Manager {
   constructor(net, name, address, abi) {
@@ -11,30 +16,35 @@ class ERC20_Manager {
   getBalance(accountAddr, cb) {
     this.contract.balanceOf(accountAddr, (err, balance) => {
       if (err)
-        cb({ 'code': 201, 'error': err });
+        cb({
+          'code': 201,
+          'error': err
+        });
       else
         cb(err, balance);
     });
   }
   transferAmount(toAddr, amount, privateKey, nonce, cb) {
-    let rawTx = {
-      nonce: nonce,
-      gasPrice: this.net.web3.toHex(10*1e9),
-      gasLimit: this.net.web3.toHex(500000),
-      to: this.address,
-      value: '0x0',
-      data: this.contract.transfer.getData(toAddr, amount)
-    };
-    let tx = new Tx(rawTx);
-    tx.sign(Buffer.from(privateKey, 'hex'));
-    let serializedTx = tx.serialize();
-    this.net.web3.eth.sendRawTransaction('0x' + serializedTx.toString('hex'), (err, txHash) => {
-      cb(err, txHash);
-    });
+    try {
+      let rawTx = {
+        nonce: nonce,
+        gasPrice: this.net.web3.toHex(10 * 1e9),
+        gasLimit: this.net.web3.toHex(500000),
+        to: this.address,
+        value: '0x0',
+        data: this.contract.transfer.getData(toAddr, amount)
+      };
+      let tx = new Tx(rawTx);
+      tx.sign(Buffer.from(privateKey, 'hex'));
+      let serializedTx = tx.serialize();
+      this.net.web3.eth.sendRawTransaction('0x' + serializedTx.toString('hex'), (err, txHash) => {
+        cb(err, txHash);
+      });
+    } catch (error) {
+      cb(error, null)
+    }
   }
 }
-
-
 
 let erc20_manager = {
   'main': {},

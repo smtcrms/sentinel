@@ -1,29 +1,27 @@
-import { scheduleJob } from "node-schedule";
-import { waterfall, eachSeries } from "async";
+import {
+  scheduleJob
+} from "node-schedule";
+import {
+  waterfall,
+  eachSeries
+} from "async";
 
 import ETHHelper from '../helpers/eth';
-import { Connection, Payment } from "../models";
-import database from "../db/database";
+import {
+  Connection,
+  Payment
+} from "../models";
 
 export const payments = (message) => {
-  let hour = 0;
-  let minute = 0;
   let paidCount = 0;
   let unPaidCount = 0;
 
   if (message === 'start') {
-    let j = scheduleJob('0 * * * * *', () => {
-      let currentTime = new Date()
+    let j = scheduleJob('0 0 * * *', () => {
       let timestamp = Date.now() / 1000
 
       waterfall([
         (next) => {
-          if (currentTime.getHours() == hour && currentTime.getMinutes() == minute) {
-            next();
-          } else {
-            next({}, null)
-          }
-        }, (next) => {
           Connection.aggregate([{
             '$match': {
               'start_time': {
@@ -39,7 +37,7 @@ export const payments = (message) => {
           })
         }, (result, next) => {
           eachSeries(result, (addr, iterate) => {
-            if (addr['_id']) {
+            if (addr['_id'] && addr['_id'].length >= 30) {
               ETHHelper.getVpnUsage(addr['_id'], (err, usage) => {
                 if (!err) {
                   if (usage) {
@@ -64,13 +62,13 @@ export const payments = (message) => {
             Payment.update({
               'timestamp': timestamp
             }, {
-                'paid_count': paidCount,
-                'unpaid_count': unPaidCount
-              }, {
-                'upsert': true
-              }, (err, resp) => {
-                next()
-              })
+              'paid_count': paidCount,
+              'unpaid_count': unPaidCount
+            }, {
+              'upsert': true
+            }, (err, resp) => {
+              next()
+            })
           })
         }
       ], (err, resp) => {

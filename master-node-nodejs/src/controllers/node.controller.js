@@ -60,15 +60,12 @@ const registerNode = (req, res) => {
   let ip = req.body['ip']
   let location = req.body['location']
   let netSpeed = req.body['net_speed']
-  let vpnType = req.body['vpn_type'] || 'openvpn'
+  let vpnType = 'vpn_type' in req.body ? req.body['vpn_type'] : 'openvpn'
   let token = uuid.v4();
   let joinedOn = Date.now() / 1000;
   let latency = null;
-  let method = 'AES-128-CBC'
-  if (vpnType == 'socks5')
-    method = 'aes-256-cfb'
-
-  let encMethod = req.body['enc_method'] || method
+  let method = vpnType === 'socks5' ? 'aes-256-cfb' : 'AES-128-CBC';
+  let encMethod = 'enc_method' in req.body ? req.body['enc_method'] : method;
 
   accountAddr = accountAddr.toString();
   pricePerGB = parseFloat(pricePerGB);
@@ -84,20 +81,18 @@ const registerNode = (req, res) => {
       })
     }, (next) => {
       Node.findOne({
-          "account_addr": accountAddr
-        },
-        (err, node) => {
-          if (!err) {
-            next(null, node)
-          } else next({
-            'succes': false,
-            'message': 'Error occurred while registering node.'
-          }, null)
-        })
+        "account_addr": accountAddr
+      }, (err, node) => {
+        if (!err) {
+          next(null, node)
+        } else next({
+          'succes': false,
+          'message': 'Error occurred while registering node.'
+        }, null)
+      })
     }, (node, next) => {
-      if (!location['city']) {
-        location['city'] = 'Unknown'
-      }
+      location['city'] = 'city' in location ? location['city'] : 'Unknown'
+
       if (!node) {
         let data = {
           'account_addr': accountAddr,
@@ -188,7 +183,7 @@ const updateNodeInfo = (req, res) => {
 
   async.waterfall([
     (next) => {
-      if (info['type'] == 'location') {
+      if (info['type'] === 'location') {
         let location = info['location'];
         let updateData = {
           'location': location
@@ -196,11 +191,10 @@ const updateNodeInfo = (req, res) => {
 
         database.update(Node, findData, updateData,
           (err, node) => {
-
             if (err) next(err, null);
             else next(null, node);
           })
-      } else if (info['type'] == 'net_speed') {
+      } else if (info['type'] === 'net_speed') {
         let netSpeed = info['net_speed'];
 
         let updateData = {
@@ -212,7 +206,7 @@ const updateNodeInfo = (req, res) => {
             if (err) next(err, null);
             else next(null, node);
           })
-      } else if (info['type'] == 'vpn') {
+      } else if (info['type'] === 'vpn') {
         let initOn = parseInt(Date.now() / 1000)
         let updateData = {
           'vpn.status': 'up',
@@ -225,7 +219,7 @@ const updateNodeInfo = (req, res) => {
             if (err) next(err, null);
             else next(null, node);
           })
-      } else if (info['type'] == 'alive') {
+      } else if (info['type'] === 'alive') {
         let pingOn = parseInt(Date.now() / 1000)
         let updateData = {
           'vpn.status': 'up',
@@ -301,12 +295,12 @@ const updateConnections = (req, res) => {
             delete connection['account_addr'];
           }
           if ('usage' in connection) {
-            connection['server_usage'] = connection['usage']
-            delete connection['usage']
+            connection['server_usage'] = connection['usage'];
+            delete connection['usage'];
           }
-          if ('client_addr' in connection && connection['client_addr'] == 16) { // Fixes for SLC
+          if ('client_addr' in connection && connection['client_addr'] === 16) { // Fixes for SLC
             connection['device_id'] = connection['client_addr'];
-            connection['client_addr'] = REFERRAL_DUMMY
+            connection['client_addr'] = REFERRAL_DUMMY;
           }
 
           Connection.findOne({
@@ -316,7 +310,7 @@ const updateConnections = (req, res) => {
             if (!data) {
               connection['start_time'] = Date.now() / 1000;
               connection['end_time'] = null;
-              let connectionData = new Connection(connection)
+              let connectionData = new Connection(connection);
 
               database.insert(connectionData, (err, resp) => {
                 sessionNames.push(connection['session_name'])
@@ -336,7 +330,7 @@ const updateConnections = (req, res) => {
               }
               database.update(Connection, findData, updateData, (err, resp) => {
                 sessionNames.push(connection['session_name'])
-                let endTime = connection['end_time'] || null
+                let endTime = 'end_time' in connection ? connection['end_time'] : null;
                 if (endTime)
                   cond = '$in'
                 iterate()
@@ -454,10 +448,13 @@ const getDetails = (address, cb) => {
   }
   async.waterfall([
     (next) => {
-      let dt1 = Date.now() / 1000;
+      let date = parseInt(Date.now() / 1000) - (5 * 24 * 60 * 60); // 5days
       Node.aggregate([{
         $match: {
-          account_addr: address
+          'account_addr': address,
+          'vpn.ping_on': {
+            $gte: date
+          }
         }
       }, {
         $project: {
