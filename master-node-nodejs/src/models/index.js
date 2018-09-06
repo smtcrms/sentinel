@@ -12,6 +12,7 @@ import { Swixes } from "./swixes";
 import { Device } from "./devices";
 import { refSession } from "./refSessions";
 import { Active } from "./active";
+import { Earning } from "./earned.balances";
 
 export {
   Connection,
@@ -27,5 +28,6 @@ export {
   Swixes,
   Device,
   refSession,
-  Active
+  Active,
+  Earning
 }

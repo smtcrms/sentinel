@@ -9,7 +9,8 @@ import {
   Connection,
   Statistic,
   Payment,
-  Device
+  Device,
+  Earning
 } from "../models";
 import EthHelper from '../helpers/eth';
 import {
@@ -479,10 +480,12 @@ const getDetails = (address, cb) => {
         }
       })
     }, (next) => {
-      ERC20Manager['rinkeby']['SENT'].getBalance(address, (error, balance) => {
+      Earning.findOne({
+        node_address: address
+      }, (error, resp) => {
         if (error) next(errorMessage, null)
         else {
-          details.earned_tokens = parseFloat(balance)
+          details.earned_tokens = parseFloat(resp['earned_balances'])
           next()
         }
       })
@@ -517,6 +520,7 @@ const getNodesList = (req, res) => {
         }
       })
     }, (next) => {
+      let dt = Date.now() / 1000;
       async.each(nodesList, (node, iterate) => {
         getDetails(node['_id'], (error, _details) => {
           if (!error && _details) {
@@ -526,6 +530,7 @@ const getNodesList = (req, res) => {
           iterate()
         })
       }, () => {
+        console.log('time taken is', Date.now() / 1000 - dt)
         nodeDetailsList = nodeDetailsList.sort((a, b) => b.sessions_served - a.sessions_served);
         next();
       })
