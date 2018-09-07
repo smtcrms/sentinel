@@ -30,8 +30,8 @@ const routes = new Router();
 const isDev = process.env.NODE_ENV === 'development';
 const isTest = process.env.NODE_ENV === 'test';
 
-if (!isTest)
-  app();
+// if (!isTest)
+//   app();
 
 routes.get('/', (req, res) => {
   res.status(200).send({

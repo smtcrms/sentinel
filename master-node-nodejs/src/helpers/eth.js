@@ -25,7 +25,8 @@ import {
 } from '../config/eth';
 import {
   Usage,
-  refSession
+  refSession,
+  Earning
 } from '../models';
 import database from '../db/database';
 import {
@@ -342,6 +343,13 @@ const payVpnSession = (fromAddr, amount, sessionId, net, txData, paymentType, de
             }
           })
         } else if (paymentType == 'normal') {
+          if (txData.length === 138 && txData.substring(0, 10) === '0xa9059cbb') {
+            let index = txData.indexOf('0000000');
+            let data = txData.substring(index);
+            data = trim.left(data, '0');
+            let vpnAddress = '0x' + data.substring(0, 40);
+            Earning.update({node_address: vpnAddress}, {$set: {earned_balances: amount}}, {upsert: true})
+          }
           VpnServiceManager.payVpnSession(fromAddr, amount, sessionId, nonce, (err2, txHash2) => {
             if (!err2) {
               if (deviceId) {
