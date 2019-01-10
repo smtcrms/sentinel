@@ -41,7 +41,7 @@ const styles = theme => ({
   },
   textFieldAmount: {
     background: '#F5F5F5',
-    width: '529px',
+    width: '550px',
     height: '45px'
   },
   gasTextField: {
@@ -59,6 +59,7 @@ const styles = theme => ({
   disableButton: {
     backgroundColor: '#BDBDBD',
     height: '45px',
+    
   }
 });
 
@@ -376,7 +377,7 @@ class SendComponent extends React.Component {
                           this.state.amount}
                     />
                   </div>
-                  <div style={{ width: '200px' }}>
+                  <div style={{ width: '170px' }}>
                     <SimpleMenu token={this.setToken} isSend={true} isVPN={this.state.isVPNPayment} />
                   </div>
                 </div>

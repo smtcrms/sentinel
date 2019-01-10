@@ -7,19 +7,34 @@ import { createTMAccount } from '../Actions/createTM.action';
 import { setTMConfig } from '../Utils/UserConfig';
 import CustomTextField from './customTextfield';
 import { Button, Snackbar } from '@material-ui/core';
-import { createAccountStyle } from '../Assets/createtm.styles';
 import { withStyles } from '@material-ui/core/styles';
 import { compose } from 'recompose';
+import IconButton from "@material-ui/core/IconButton";
+import Visibility from '@material-ui/icons/Visibility';
+import VisibilityOff from '@material-ui/icons/VisibilityOff';
+import { createAccountStyle } from '../Assets/createtm.styles';
+import '../Assets/createtm.css';
+
 
 let lang = require('./../Constants/language');
-
 
 const Customstyles = theme => ({
     button: {
         margin: theme.spacing.unit,
+    },
+    enableButton: {
+        "&:hover": {
+            backgroundColor: '#2f3245'
+        },
+        backgroundColor: '#2f3245',
+        // height: '45px',
+    },
+    disableButton: {
+        backgroundColor: '#BDBDBD',
+        // height: '45px',
+        cursor: 'not-allowed',
     }
 });
-
 class CreateTMAccount extends Component {
     constructor(props) {
         super(props);
@@ -27,7 +42,8 @@ class CreateTMAccount extends Component {
             keyName: '',
             keyPassword: '',
             openSnack: false,
-            snackMessage: ''
+            snackMessage: '',
+            showPassword: false
         }
     }
 
@@ -36,7 +52,7 @@ class CreateTMAccount extends Component {
     }
 
     createAccount = () => {
-        this.props.createTMAccount(this.state.keyName, this.state.keyPassword).then(res => {
+        this.props.createTMAccount(this.state.keyName, this.state.keyPassword, null).then(res => {
             if (res.error) {
                 let regError = (res.error.data).replace(/\s/g, "");
                 this.setState({
@@ -61,27 +77,46 @@ class CreateTMAccount extends Component {
     handleClose = (event, reason) => {
         this.setState({ openSnack: false });
     };
+    handleShow = () => {
+        this.setState({ showPassword: !this.state.showPassword })
+    }
 
     render() {
         const { classes } = this.props;
         let language = this.props.lang;
+        let isDisabled = (this.state.keyName === '' || this.state.keyPassword === '') ? true : false
         return (
             <div style={createAccountStyle.formStyle}>
                 <div> <h2 style={createAccountStyle.createStyle}><center>  {lang[language].CreateWalletSST}</center></h2></div>
                 <div style={createAccountStyle.secondDivStyle}>
                     <p style={createAccountStyle.headingStyle}>{lang[language].AccountName}</p>
-                    <CustomTextField type={'text'} placeholder={''} disabled={false} value={this.state.keyName}
+                    <CustomTextField type={'text'} placeholder={''} disabled={false}
+                     multi={false}
+                      value={this.state.keyName}
                         onChange={(e) => { this.setState({ keyName: e.target.value }) }}
                     />
                     <p style={createAccountStyle.headingStyle}>{lang[language].AccountPwd}</p>
-                    <CustomTextField type={'password'} placeholder={''} disabled={false} value={this.state.keyPassword}
-                        onChange={(e) => { this.setState({ keyPassword: e.target.value }) }}
+                    <CustomTextField type={this.state.showPassword ? 'text' : 'password'} placeholder={''} disabled={false} value={this.state.keyPassword}
+                        multi={false}
+                       onChange={(e) => { this.setState({ keyPassword: e.target.value }) }}
                     />
+
+                    <IconButton
+                        aria-label="Toggle password visibility"
+                        className="showPassword"
+                        onMouseDown={() => this.handleShow()}
+                    >
+                        {this.state.showPassword ? <Visibility /> : <VisibilityOff />}
+                    </IconButton>
+
                     <Button
                         variant="outlined"
                         color="primary"
+                        disabled={isDisabled}
                         onClick={() => { this.createAccount() }}
-                        className={classes.button} style={{ margin: 20, outline: 'none' }}>
+                        className={!isDisabled ? classes.enableButton : classes.disableButton}
+                        style={createAccountStyle.buttonStyle}>
+
                         {lang[language].CreateAccount}
                     </Button>
                 </div>

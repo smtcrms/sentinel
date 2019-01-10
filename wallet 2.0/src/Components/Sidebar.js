@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import {
-    menuItems, TMdisabledmenuItems, notTestItemIcons, notInTestMenuItems, testMenuItems,
+    menuItems, TMdisabledmenuItems, TMrecoverItems, notTestItemIcons, notInTestMenuItems, testMenuItems,
     testMenuItemsIcons, disabledItemsMain, disabledItemsTest, disabledItemsTM
 } from '../Constants/constants';
 import { sidebarStyles } from '../Assets/sidebar.styles';
@@ -110,10 +110,8 @@ class Sidebar extends Component {
                 disabledItemsMain.includes(item.value)) { }
             else if (this.props.isTest && disabledItemsTest.includes(item.value)) { }
             else {
-                console.log("setting current ", item.value)
-                if (item.value === 'eth' || item.value === 'tmint') { console.log("not setting current1 ", item.value) }
+                if (item.value === 'eth' || item.value === 'tmint') { }
                 else {
-                    console.log("setting current1 ", item.value)
                     this.props.setCurrentTab(item.value);
 
                 }
@@ -123,11 +121,8 @@ class Sidebar extends Component {
             if (this.props.component !== 'dashboard' && disabledItemsTM.includes(item.value)) { }
             else if (!this.props.isTest) { }
             else {
-
-                console.log("in last if condition jh", this.props.isTest)
-                if (item.value === 'eth' || item.value === 'tmint') { console.log("not setting current2 ", item.value) }
+                if (item.value === 'eth' || item.value === 'tmint') { }
                 else {
-                    console.log("setting current2 ", item.value)
                     this.props.setCurrentTab(item.value);
 
                 }
@@ -148,6 +143,15 @@ class Sidebar extends Component {
     }
 
     getIcon = (iconName) => {
+
+        if( iconName === 'createIcon'){
+            return <img src={'../src/Images/create.svg'} alt="create_logo"
+                    style={{ width: 25, paddingBottom: 7, marginTop: -3}} />
+        }
+        if( iconName === 'recoverIcon'){
+            return <img src={'../src/Images/recover.svg'} alt="recover_logo"
+                    style={{ width: 25, paddingBottom: 7, marginTop: -3}} />
+        }
         if (iconName === 'tmintIcon') {
             if (!this.props.isTenderMint)
                 return <img src={'../src/Images/tmint-logo-green.svg'} alt="tendermint_logo"
@@ -166,15 +170,15 @@ class Sidebar extends Component {
         }
 
         if (iconName === 'listIcon') {
-            if(this.props.isTest){
+            if (this.props.isTest) {
                 return <img src={'../src/Images/list.svg'} alt="etherem_logo"
-                style={{ width: 25, paddingBottom: 6, marginTop: 2}} />
+                    style={{ width: 25, paddingBottom: 6, marginTop: 2 }} />
             }
-            else{
+            else {
                 return <img src={'../src/Images/list.svg'} alt="etherem_logo"
-                style={{ width: 25, paddingBottom: 6, marginTop: 2, opacity:0.3}} />
+                    style={{ width: 25, paddingBottom: 6, marginTop: 2, opacity: 0.3 }} />
             }
-               
+
         }
         else {
             let Icon = this.components[iconName];
@@ -198,14 +202,14 @@ class Sidebar extends Component {
 
 
     render() {
-        let { classes, isTest, isTenderMint, component, language } = this.props;
+        let { classes, isTest, isTenderMint, component, language, account } = this.props;
 
         let currentTab = this.props.currentTab;
         let sidebarMenuItems = isTest ? (isTenderMint && component !== 'dashboard' ?
-            TMdisabledmenuItems : testMenuItems) : notInTestMenuItems
+            (account ? TMdisabledmenuItems : TMrecoverItems) : testMenuItems) : notInTestMenuItems
         let menuItemsIcons = isTest ?
             (isTenderMint && component !== 'dashboard' ?
-                TMdisabledmenuItems : testMenuItemsIcons)
+                (account ? TMdisabledmenuItems : TMrecoverItems) : testMenuItemsIcons)
             : notTestItemIcons
         return (
             <div style={sidebarStyles.totalDiv}>
@@ -330,6 +334,7 @@ function mapStateToProps(state) {
         currentTab: state.setCurrentTab,
         isTenderMint: state.setTendermint,
         component: state.setTMComponent,
+        account: state.createTMAccount
     }
 }
 
