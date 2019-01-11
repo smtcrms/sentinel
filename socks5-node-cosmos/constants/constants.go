@@ -25,7 +25,6 @@ const (
 	5) chacha20
 
 	leave it blank for default encryption method (aes-256-cfb)
-
 	`
 	AskForConfirmation  = "Is Everything okay? [y/n]"
 	AddedSessionDetails = "ADDED_SESSION_DETAILS"
@@ -36,5 +35,5 @@ const (
 var (
 	GaiaCLI   = []string{"gaiacli", "advanced", "rest-server", "--node", "tcp://tm-lcd.sentinelgroup.io:26657", "--chain-id", "Sentinel-testnet-1.1", ">>", "tendermint.log"}
 	Mongod    = []string{"mongod"}
-	GurniCorn = []string{"--reload", "-b", "0.0.0.0:3000", "--log-level", "DEBUG", "--chdir", "/root/", "server:server"}
+	Shadowsocks = []string{"-c", "/root/sentinel/shell_scripts/shadowsocks.json"}
 )

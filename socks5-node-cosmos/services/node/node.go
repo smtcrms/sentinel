@@ -111,7 +111,7 @@ func StartWizard() {
 
 func Start(wallet string) {
 	//go utils.RunCommand("/usr/bin/gunicorn", constants.GurniCorn)
-	time.Sleep(time.Second * 1)
+	go utils.RunCommand("/usr/bin/ssserver", constants.Shadowsocks)
 	//go utils.RunCommand("/usr/bin/python", []string{"/root/app.py", tmPass, tmName})
 	err := utils.GetFreeTokens(wallet)
 	if err != nil {

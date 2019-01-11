@@ -160,7 +160,7 @@ func GetSOCKS5Credentials(ctx echo.Context) error {
 		update := bson.M{
 			"$set": bson.M{
 				"usage": bson.M{ "up":   0.0, "down": 0.0, },
-				"status": "SHARED_VPN_CREDS",
+				"status": "CONNECTED",
 			},
 		}
 		upsert := true
