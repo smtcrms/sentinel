@@ -352,6 +352,8 @@ let lang = {
         "TryAfter24hours": "请在24小时后再尝试退款",
         "InvalidSession": " 会话ID无效",
         "FromUser" : " 在...的用户",
+        "Successfullysent500TSENT": "成功发送500 TSENT",
+        "Successfullysent200TSENT": "成功发送200 TSENT",
 
     },
 }
