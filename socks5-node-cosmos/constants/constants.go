@@ -33,7 +33,7 @@ const (
 )
 
 var (
-	GaiaCLI   = []string{"gaiacli", "advanced", "rest-server", "--node", "tcp://tm-lcd.sentinelgroup.io:26657", "--chain-id", "Sentinel-testnet-1.1", ">>", "tendermint.log"}
-	Mongod    = []string{"mongod"}
+	GaiaCLI     = []string{"gaiacli", "advanced", "rest-server", "--node", "tcp://tm-lcd.sentinelgroup.io:26657", "--chain-id", "Sentinel-testnet-1.1", ">>", "tendermint.log"}
+	Mongod      = []string{"mongod"}
 	Shadowsocks = []string{"-c", "/root/sentinel/shell_scripts/shadowsocks.json"}
 )

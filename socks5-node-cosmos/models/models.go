@@ -8,14 +8,24 @@ type MasterNodeResp struct {
 }
 
 type Client struct {
-	AccountAddr string `json:"account_addr" bson:"account_addr"`
-	SessionID   string `json:"session_id" bson:"session_id"`
-	Token       string `json:"token" bson:"token"`
-	Status      string `json:"status" bson:"status"`
-	Usage       struct {
-		Up   float64 `json:"up" bson:"up"`
-		Down float64 `json:"down" bson:"down"`
-	} `json:"usage" bson:"usage"`
+	AccountAddr string      `json:"account_addr" bson:"account_addr"`
+	SessionID   string      `json:"session_id" bson:"session_id"`
+	Token       string      `json:"token" bson:"token"`
+	Status      string      `json:"status" bson:"status"`
+	Signatures  []signature `json:"signatures, omitempty" bson:"signatures, omitempty"`
+	Usage       usage       `json:"usage" bson:"usage"`
+}
+
+type usage struct {
+	Up   float64 `json:"up" bson:"up"`
+	Down float64 `json:"down" bson:"down"`
+}
+
+type signature struct {
+	Hash   string `json:"hash"`
+	Index  int    `json:"index"`
+	Amount string `json:"amount"`
+	Final  bool `json:"final"`
 }
 
 type Config struct {
@@ -113,4 +123,21 @@ type Route struct {
 	Service func(echo.Context) error
 	Name    string
 	Method  string
+}
+
+type NewTransaction struct {
+	From   string `json:"fromAccountAddress"`
+	To     string `json:"toAccountAddress"`
+	TxHash string `json:"txHash"`
+}
+
+type NewVPNPaymentBody struct {
+	Amount    string `json:"amount"`
+	SessionId string `json:"session_id"`
+	Counter   int    `json:"counter"`
+	Name      string `json:"name"`
+	Gas       int    `json:"gas"`
+	IsFinal   bool   `json:"isfinal"`
+	Password  string `json:"password"`
+	Sign      string `json:"sign"`
 }

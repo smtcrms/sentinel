@@ -159,7 +159,7 @@ func GetSOCKS5Credentials(ctx echo.Context) error {
 		}
 		update := bson.M{
 			"$set": bson.M{
-				"usage": bson.M{ "up":   0.0, "down": 0.0, },
+				"usage":  bson.M{"up": 0.0, "down": 0.0},
 				"status": "CONNECTED",
 			},
 		}
@@ -228,8 +228,8 @@ func AddSessionPaymentSign(ctx echo.Context) error {
 	})
 }
 
-func endSession() int {
-	stdOut, _, _ := utils.RunCommand("pid", []string{"ssserver"})
+func endSession(sessionId string) int {
+	stdOut, _, _ := utils.RunCommand("pidof", []string{"ssserver"})
 	if stdOut != "" {
 		log.Println("here's stdout: ", stdOut)
 		_, _, code := utils.RunCommand("/bin/kill", []string{"-9", strings.TrimSpace(stdOut)})
@@ -245,6 +245,7 @@ func DisconnectClient(ctx echo.Context) error {
 	}
 	PaymentFrom := ctx.Param("PAYMENT_FROM")
 	SessionID := ctx.Param("SESSION_ID")
+	//ClientName := "client" + SessionID
 
 	if err := json.NewDecoder(ctx.Request().Body).Decode(&body); err != nil {
 		return ctx.JSON(http.StatusBadRequest, models.Resp{
@@ -266,16 +267,66 @@ func DisconnectClient(ctx echo.Context) error {
 		})
 	}
 
-	if endSession() != 0 {
+	sessionQuery := bson.M{
+		"status": "CONNECTED",
+		"session_id": SessionID,
+	}
+	session, err := DB.FindOne(sessionQuery)
+	if err != nil {
+		return ctx.JSON(http.StatusBadRequest, models.Resp{
+			Success: false,
+			Message: err.Error(),
+		})
+	}
+
+	if endSession(SessionID) != 0 {
 		return ctx.JSON(http.StatusInternalServerError, models.Resp{
 			Success: false,
 			Message: "error while ending the client/node session",
 		})
 	}
 
+	color.Red("output here: %s", session)
+
+	if len(session.Signatures) > 0 {
+		sign := session.Signatures[len(session.Signatures)-1]
+		config, err := utils.GetNodeConfig()
+		if err != nil {
+			return ctx.JSON(http.StatusInternalServerError, models.Resp{
+				Success: false,
+				Message: err.Error(),
+			})
+		}
+		body := models.NewVPNPaymentBody{
+			Amount:    sign.Amount,
+			SessionId: SessionID,
+			Counter:   sign.Index,
+			Gas:       constants.DefaultGas,
+			IsFinal:   true,
+			Password:  config.Account.Password,
+			Name:      config.Account.Name,
+			Sign:      sign.Hash,
+		}
+
+		resp, err := utils.NewRequest(http.MethodPost, constants.CosmosURL+"/vpn/getpayment", "application/json", body)
+		if err != nil {
+			return ctx.JSON(http.StatusBadRequest, models.Resp{
+				Success: false,
+				Message: err.Error(),
+			})
+		}
+		color.Green("output here: %s", resp)
+
+	color.Red("response from new request: /vpn/getpayment, %s", resp)
 	return ctx.JSON(http.StatusOK, models.Resp{
 		Success: true,
 		Message: "Disconnected successfully.",
+	})
+	}
+
+	return ctx.JSON(http.StatusBadRequest, models.Resp{
+		Success: false,
+		Message: "no valid signatures found",
 	})
 }
 

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/fatih/color"
+	"github.com/pkg/errors"
 	"github.com/sentinel-official/sentinel/socks5-node-cosmos/constants"
 	"github.com/sentinel-official/sentinel/socks5-node-cosmos/models"
 	"io/ioutil"
@@ -63,4 +64,21 @@ func Register(body models.RegisterationRequest, url string) models.Register {
 	color.Cyan("\n result: %s \n data: %s", byteData, res)
 	return res
 	//, errors.New("error while body return: " + e.Error())
+}
+
+func AddTransaction(txn models.NewTransaction) error {
+	URL := constants.TMMasterNode + "/txes"
+	body, err := json.Marshal(txn)
+	if err != nil {
+		return errors.Errorf("error while json marshal: %s", err.Error())
+	}
+	resp, err := http.Post(URL, "application/json", bytes.NewBuffer(body))
+	if err != nil {
+		return errors.Errorf("error while making the post request: %s", err.Error())
+	}
+	if resp.StatusCode == 200 {
+		return nil
+	}
+
+	return errors.Errorf("error in post request for new transaction: %s", err.Error())
 }

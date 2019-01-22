@@ -7,6 +7,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/labstack/echo"
 	"github.com/mongodb/mongo-go-driver/bson"
+	"github.com/pkg/errors"
 	"github.com/sentinel-official/sentinel/socks5-node-cosmos/constants"
 	"github.com/sentinel-official/sentinel/socks5-node-cosmos/dbo"
 	"github.com/sentinel-official/sentinel/socks5-node-cosmos/models"
@@ -258,4 +259,23 @@ func UpdateBandwidthUsage(ctx echo.Context) error {
 		Message: client,
 	})
 
+}
+
+func UpdateSession(sessionId, status string) error {
+	selector := bson.M{
+		"status": sessionId,
+	}
+	update := bson.M{
+		"$set": bson.M{
+			"status": status,
+		},
+	}
+	upsert := false
+
+	_, err := DB.FindOneAndUpdate(selector, update, &upsert)
+	if err != nil {
+		return errors.Errorf("error while updating connection status: %s", err.Error())
+	}
+
+	return nil
 }

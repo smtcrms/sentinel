@@ -176,7 +176,6 @@ func GetFreeTokens(wallet string) error {
 }
 
 func RotatingBar() {
-
 	s := spinner.New(spinner.CharSets[43], 200*time.Millisecond) // Build our new spinner
 	s.Start()                                                    // Start the spinner
 	_ = s.Color("green")
@@ -186,3 +185,29 @@ func RotatingBar() {
 }
 
 //routes []string, services []func(echo.Context) error
+
+func NewRequest(Method, URL, ContentType string, Body interface{}) ([]byte, error) {
+	client := &http.Client{}
+
+	b, e := json.Marshal(Body)
+	if e != nil {
+		return nil, e
+	}
+	req, err := http.NewRequest(Method, URL, bytes.NewBuffer(b))
+	req.Header.Set("Content-Type", ContentType)
+	//resp, err := http.Post(constants.TM_MASTER_NODE + "/nodes", "application/json" ,  bytes.NewBuffer(b))
+	if err != nil {
+		log.Println("error while request post for keep alive: \n", err)
+		return nil, err
+	}
+	client.Timeout = time.Second * 10
+	resp, err := client.Do(req)
+	if err != nil {
+		color.Red("Error in Keep Alive Job: %s", err)
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	return ioutil.ReadAll(resp.Body)
+	//log.Printf("here's the response: \n%s", byteData)
+}
