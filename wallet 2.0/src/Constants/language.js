@@ -309,7 +309,7 @@ let lang = {
         "ClaimedBy": "Tokens Claimed by Service Provider (node)",
         "AddressToSend": "ADDRESS TO SEND",
         "NodeID": "Node ID",
-        "Socks5ComingSoon": "SOCKS5 (Coming Soon)",
+        "Socks5ComingSoon": "SOCKS5 (Experimental)",
         "PrivateComingSoon": "Private (Coming Soon)",
         "VersionInSidebar": "dVPN - alpha-0.1.1",
         "LockedForSession": "Locked For dVPNSession",

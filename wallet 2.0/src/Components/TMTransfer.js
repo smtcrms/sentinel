@@ -6,6 +6,8 @@ import { sendAmount, getTMBalance, addTransaction } from '../Actions/tendermint.
 import { payVPNSession, getSessionInfo } from './../Actions/tmvpn.action';
 import { payVPNTM, setVpnStatus, setActiveVpn } from '../Actions/vpnlist.action';
 import { connectVPN, checkVPNDependencies } from './../Actions/connectOVPN';
+import { connectSocks } from './../Actions/connectSOCKS';
+
 import CustomTextField from './customTextfield';
 import { Button, Snackbar } from '@material-ui/core';
 import { createAccountStyle } from '../Assets/createtm.styles';
@@ -174,6 +176,7 @@ class TMTransfer extends Component {
                                     let session_data = sesRes.payload;
                                     let availableData = 'maxUsage' in session_data ? session_data.maxUsage.download : 0;
                                     localStorage.setItem('availableData', availableData);
+                                    if ( localStorage.getItem('VPN_TYPE') === 'openvpn' ) {
                                     connectVPN(this.props.account.address, vpn_data, remote.process.platform, session_data, (err, platformErr, res) => {
                                         console.log("VPN Response...", err, platformErr, res);
                                         if (err) {
@@ -196,7 +199,26 @@ class TMTransfer extends Component {
                                             });
                                             this.props.setCurrentTab('receive');
                                         }
+                                    }) 
+                                } else {
+                                    connectSocks(this.props.account.address, vpn_data, remote.process.platform, session_data, (err, res) => {
+                                        console.log("VPN Response...", err, res);
+                                        if (err) {
+                                            console.log("Connect VPN Err...", err, res);
+                                            this.setState({ sending: false, openSnack: true, snackMessage: err.message });
+                                        }
+                                        else {
+                                            this.props.setActiveVpn(vpn_data);
+                                            localStorage.setItem('lockedAmount', 100);
+                                            this.props.setVpnStatus(true);
+                                            this.setState({
+                                                sending: false, toAddress: '', keyPassword: '', amount: '',
+                                                openSnack: true, snackMessage: lang[this.props.language].VpnConnected
+                                            });
+                                            this.props.setCurrentTab('receive');
+                                        }
                                     })
+                                }
                                 }
                             })
                         }

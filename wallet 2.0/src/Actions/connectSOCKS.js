@@ -14,7 +14,7 @@ const { exec } = window.require('child_process');
 let CONNECTED = false;
 let count = 0;
 
-export async function connectSocks(account_addr, vpn_addr, os, cb) {
+export async function connectSocks(account_addr, vpn_addr, os, data, cb) {
     switch (os) {
         case 'win32':
             checksentinelSocks((error) => {
@@ -34,14 +34,31 @@ export async function connectSocks(account_addr, vpn_addr, os, cb) {
                 }
             })
         case 'linux':
+        if (localStorage.getItem('isTM') === 'true' ) {
+            tmSocks5Connct(account_addr, vpn_addr, data, (err, res) => {
+            console.log("tmsocks5Connct", account_addr, vpn_addr, data, err, res)
+                cb(err, res)
+            })
+            break;
+        } else {
             socksConnect(account_addr, vpn_addr, (err, res) => {
                 cb(err, res)
             });
+        }
             break;
         default: {
             break;
         }
     }
+}
+
+function tmSocks5Connct(account_addr, vpn_addr, data, cb) {
+    console.log("here is tmSocks5Connct: ", account_addr, vpn_addr, data)
+    getTMSocks5Creds(account_addr, vpn_addr, data, (err, res) => {
+    console.log("inner callback: ", err, res)
+        if (err) cb(err, null);
+        else connectwithSocks(res, cb);
+    })
 }
 
 function checkMacDependencies(cb) {
@@ -162,6 +179,8 @@ export async function socksConnect(account_addr, vpn_addr, cb) {
 }
 
 export function connectwithSocks(data, cb) {
+    console.log("inside connect with socks: ", data)
+
     if (remote.process.platform === 'win32') {
         fs.readFile('resources\\extras\\socks5\\gui-config.json', 'utf8', function (err, conf) {
             if (err) { }
@@ -263,4 +282,42 @@ export function getSocksCreds(account_addr, vpn_ip, vpn_port, vpn_addr, nonce, c
         .catch(err => {
             cb({ message: 'Unable to reach sentinel server at this moment' }, null)
         })
+}
+
+export function getTMSocks5Creds(account_addr, vpn_data, session_data, cb) {
+    let data = {
+        token: session_data.token
+    }
+        let sess_id = session_data.sessionId;
+        axios({
+            url: session_data.url + `/clients/${account_addr}/sessions/${sess_id}/credentials`,
+            method: 'POST',
+            data: data,
+            headers: {
+                'Accept': 'application/json',
+                'Content-type': 'application/json',
+            },
+            timeout: 10000
+        })
+            .then(response => {
+                console.log("Getting Session Credentials...", response)
+                if (response.data.success) {
+                    localStorage.setItem('TOKEN', session_data.token);
+                    localStorage.setItem('TM_VPN_URL', session_data.url);
+                    // let joinedOvpn = ovpn.join('');
+                    localStorage.setItem('SESSION_NAME', session_data.sessionId);
+                    localStorage.setItem('CONNECTED_VPN', vpn_data.vpn_addr);
+                    localStorage.setItem('IPGENERATED', response.data.message.ip);
+                    localStorage.setItem('LOCATION', vpn_data.city);
+                    localStorage.setItem('SPEED', Number(vpn_data.speed / (1024 * 1024)).toFixed(2) + ' Mbps');
+                    localStorage.setItem('VPN_TYPE', 'SOCKS5');
+                    cb(null, response.data.message)
+                }
+                else {
+                    cb({ message: 'Error occured while getting ovpn', }, null)
+                }
+            })
+            .catch(err => {
+                cb({ message: 'Error occured while getting ovpn' }, null)
+            })
 }

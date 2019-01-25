@@ -3,6 +3,7 @@ import { getSocksPIDs } from './VpnConfig';
 import { getConfig } from './UserConfig';
 import { sendUsage } from './../Actions/calculateUsage';
 import { clearConfig, removeItemsLocal } from './DisconnectVpn';
+import axios from 'axios';
 const electron = window.require('electron');
 const { exec } = window.require('child_process');
 const remote = electron.remote;
@@ -76,6 +77,7 @@ export async function disconnectSocksNonWin(addr, cb) {
                         })
                     }
                     else {
+                        endSession()
                         sendUsage(addr, null);
                         setTimeout(async () => {
                             removeItemsLocal();
@@ -87,4 +89,24 @@ export async function disconnectSocksNonWin(addr, cb) {
             });
         }
     })
+}
+
+
+function endSession() {
+    let token = localStorage.getItem("TOKEN") 
+    let account_addr = localStorage.getItem("tmAccount") 
+    let sessionId = localStorage.getItem("SESSION_NAME")
+    let url = localStorage.getItem("TM_VPN_URL") + `/clients/${account_addr}/sessions/${sessionId}/disconnect`
+
+    let body = {
+        'token': token
+    }
+
+    let config = {
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    }
+
+    axios.post(url, body, config).then(res => { console.log("halla bol; ", res) })
 }

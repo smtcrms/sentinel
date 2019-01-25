@@ -146,8 +146,41 @@ class Footer extends Component {
     disconnect = () => {
         this.setState({ isDisabled: true })
         if (this.props.isTm) {
+            if (this.props.vpnType === 'openvpn') {
             this.sendSignature(downloadData, true, this.state.counter);
             this.disconnectTMVpn();
+            } else {
+                console.log("disconnect step 1")
+             disconnectSocks(this.props.walletAddr, (res) => {
+                console.log("disconnect step 2", res)
+ 
+                 if (res) {
+                     let regError = res.replace(/\s/g, "");
+                     this.setState({
+                         openSnack: true,
+                         snackMessage: lang[this.props.language][regError] ?
+                             lang[this.props.language][regError] : res,
+                         isDisabled: false
+                     });
+                 }
+                 else {
+                     if (remote.process.platform === 'win32') {
+                         exec('start iexplore "https://www.bing.com/search?q=my+ip&form=EDGHPT&qs=HS&cvid=f47c42614ae947668454bf39d279d717&cc=IN&setlang=en-GB"', function (stderr, stdout, error) {
+                             console.log('browser opened');
+                         });
+                     }
+                     this.setState({
+                         openSnack: true, snackMessage: lang[this.props.language].DisconnectVPN,
+                         isDisabled: false, showAlert: false
+                     });
+                     this.props.clearUsage();
+                     this.props.setVpnStatus(false);
+                     setTimeout(() => {
+                        this.props.setCurrentTab('vpnHistory');
+                    }, 1200);
+                 }
+             })   
+            }
         }
         else {
             if (this.props.vpnType === 'openvpn') {
