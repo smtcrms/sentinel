@@ -64,6 +64,8 @@ export function removeItemsLocal() {
     localStorage.removeItem('IPGENERATED');
     localStorage.removeItem('LOCATION');
     localStorage.removeItem('SPEED');
+    localStorage.removeItem('startDown')
+    localStorage.removeItem('startUp')
 }
 
 export function removeSessionLocal() {

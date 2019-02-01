@@ -11,6 +11,20 @@ const os = window.require('os');
 const netStat = window.require('net-stat');
 
 export function sendUsage(accountAddr, usage) {
+    if (localStorage.getItem('isTM') === 'true' && localStorage.getItem('VPN_TYPE') === 'SOCKS5') {
+        let uri = `${localStorage.getItem("TM_VPN_URL")}/clients/${localStorage.getItem('tmAccount')}/sessions/${localStorage.getItem('SESSION_NAME')}/usage`
+        let body = {
+            'token': localStorage.getItem('TOKEN'),
+            'download': usage && usage.down ? usage.down : 0,
+            'upload': usage && usage.up ? usage.up : 0
+        }
+        let config = {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }
+        axios.put(uri, body, config)
+    }
     let uri = `${B_URL}/client/update-connection`;
     let connections = [{
         'usage': usage,
@@ -26,9 +40,17 @@ export function sendUsage(accountAddr, usage) {
 }
 
 export function setStartValues(downVal, upVal) {
+    console.log("setStartValue-1: ", downVal, upVal)
+
     getConfig(function (err, data) {
-        if (err) { }
+
+        if (err) {
+            console.log("setStartValue-2: ", downVal, upVal)
+
+         }
         else {
+            console.log("setStartValue-3: ", config, downVal, upVal)
+
             let configData = data ? JSON.parse(data) : {};
             configData.isConnected = true;
             configData.startDown = downVal;
@@ -36,6 +58,7 @@ export function setStartValues(downVal, upVal) {
             localStorage.setItem('startDown', downVal);
             localStorage.setItem('startUp', upVal);
             let config = JSON.stringify(configData);
+            console.log("setStartValue: ", config, downVal, upVal)
             fs.writeFile(CONFIG_FILE, config, (err) => { });
         }
     });
@@ -104,6 +127,7 @@ export const calculateUsage = (localAddr, value, cb) => {
                     if (remote.process.platform === 'darwin') {
                         let cmd = `netstat -b -i | grep ${obj.address} | awk '{print $7" "$8}'`;
                         let output = execSync(cmd);
+                        console.log("ip addr to look for: ", cmd)
                         let values = output.toString().trim().split(" ");
                         downCur = values[0];
                         upCur = values[1];
@@ -111,6 +135,7 @@ export const calculateUsage = (localAddr, value, cb) => {
                     else {
                         downCur = netStat.totalRx({ iface: key });
                         upCur = netStat.totalTx({ iface: key })
+                        console.log("current down and up: ", downCur, upCur)
                     }
                     if (value) {
                         usage = {
@@ -120,12 +145,19 @@ export const calculateUsage = (localAddr, value, cb) => {
                         setStartValues(downCur, upCur);
                     }
                     else {
+                        if (!localStorage.getItem('startDown')) {
+
+                        setStartValues(downCur, upCur);
+                }
+                     
                         let downDiff = downCur - localStorage.getItem('startDown');
                         let upDiff = upCur - localStorage.getItem('startUp');
                         usage = {
                             'down': downDiff,
                             'up': upDiff
                         };
+                        console.log("error: ", usage, localStorage.getItem('startDown'), localStorage.getItem('startUp'), value )
+
                     }
                     sendUsage(localAddr, usage);
                     loopStop = true;
@@ -156,6 +188,7 @@ export function getStartValues() {
         var configData = data ? JSON.parse(data) : {};
         var downVal = configData.startDown ? configData.startDown : 0;
         var upVal = configData.startUp ? configData.startUp : 0;
+        console.log("getConfig: ", downVal, upVal)
         localStorage.setItem('startDown', downVal);
         localStorage.setItem('startUp', upVal);
     })

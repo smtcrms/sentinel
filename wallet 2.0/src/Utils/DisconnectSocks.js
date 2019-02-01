@@ -108,5 +108,5 @@ function endSession() {
         }
     }
 
-    axios.post(url, body, config).then(res => { console.log("halla bol; ", res) })
+    axios.post(url, body, config).then(res => { console.log('end session', res) })
 }

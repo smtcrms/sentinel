@@ -80,6 +80,7 @@ class Dashboard extends Component {
             UsageInterval = setInterval(async () => {
                 if (this.props.vpnType === 'socks5') {
                     calculateUsage(this.props.getAccount, false, (usage) => {
+                        console.log('wrong usage: ', usage )
                         this.props.socksVpnUsage(usage);
                     });
                 } else {

@@ -7,6 +7,7 @@ import { payVPNSession, getSessionInfo } from './../Actions/tmvpn.action';
 import { payVPNTM, setVpnStatus, setActiveVpn } from '../Actions/vpnlist.action';
 import { connectVPN, checkVPNDependencies } from './../Actions/connectOVPN';
 import { connectSocks } from './../Actions/connectSOCKS';
+import { calculateUsage, socksVpnUsage } from './../Actions/calculateUsage';
 
 import CustomTextField from './customTextfield';
 import { Button, Snackbar } from '@material-ui/core';
@@ -208,6 +209,9 @@ class TMTransfer extends Component {
                                             this.setState({ sending: false, openSnack: true, snackMessage: err.message });
                                         }
                                         else {
+                                            calculateUsage(this.props.getAccount, true, (usage) => {
+                                                this.props.socksVpnUsage(usage);
+                                            });
                                             this.props.setActiveVpn(vpn_data);
                                             localStorage.setItem('lockedAmount', 100);
                                             this.props.setVpnStatus(true);
@@ -440,7 +444,8 @@ function mapDispatchToActions(dispatch) {
         getSessionInfo,
         setVpnStatus,
         setActiveVpn,
-        setCurrentTab
+        setCurrentTab,
+        socksVpnUsage
     }, dispatch)
 }
 
