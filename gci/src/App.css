@@ -1,0 +1,57 @@
+.App {
+  text-align: center;
+}
+
+.App-header {
+  background-color: #16172d;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(7px + 2vmin);
+  color: white;
+}
+
+.inputLabel fieldset{
+  border: 0 !important
+}
+
+.inputLabel input[type="text"]:focus{
+  border: 2px solid #2682c7 !important
+}
+
+.formHead {
+  font-weight: bold;
+  color: #2682c7;
+}
+
+div.dropDownStyle{
+  color:#4dbcbd !important;
+  font-size: 16px;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+div.dropDownStyle:before  {
+  border-bottom: 0px !important;
+}
+
+div.dropDownStyle:after  {
+  border-bottom: 0px !important;
+}
+
+div.dropDownStyle:hover {
+  border-bottom: 0px !important;
+}
+
+div.dropDownStyle svg {
+  color: #4dbcbd !important;
+}
+
+.dropDownDiv {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  margin: 5%;
+}

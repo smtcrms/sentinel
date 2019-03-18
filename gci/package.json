@@ -1,0 +1,48 @@
+{
+    "name": "gci",
+    "description": "Interface for gaiacli",
+    "version": "0.1.0",
+    "productName": "Gaia Client Interface",
+    "private": true,
+    "main": "main.js",
+    "author": "Dev Team <devteam@sentinel.co>",
+    "license": "MIT",
+    "homepage": "./",
+    "dependencies": {
+        "axios": "^0.18.0",
+        "react-select": "^2.4.2"
+    },
+    "scripts": {
+        "start": "react-scripts start",
+        "build": "react-scripts build",
+        "test": "react-scripts test",
+        "eject": "react-scripts eject",
+        "package-linux": "electron-packager . offline-transaction-signer --overwrite --asar --platform=linux --arch=x64 --icon=public/icon.png --prune=true --out=release-builds",
+        "create-debian-installer": "electron-installer-debian --src release-builds/offline-transaction-signer-linux-x64/ --arch amd64 --config debian.json"
+    },
+    "eslintConfig": {
+        "extends": "react-app"
+    },
+    "browserslist": [
+        ">0.2%",
+        "not dead",
+        "not ie <= 11",
+        "not op_mini all"
+    ],
+    "devDependencies": {
+        "@material-ui/core": "^3.9.2",
+        "@material-ui/icons": "^3.0.2",
+        "@material-ui/lab": "^3.0.0-alpha.30",
+        "electron": "^3.0.7",
+        "electron-installer-debian": "^0.8.1",
+        "electron-packager": "^10.1.2",
+        "react": "^16.6.0",
+        "react-copy-to-clipboard": "^5.0.1",
+        "react-dom": "^16.6.0",
+        "react-flexbox-grid": "^2.1.2",
+        "react-redux": "^5.1.0",
+        "react-scripts": "2.1.0",
+        "redux": "^4.0.1",
+        "redux-promise": "^0.6.0"
+    }
+}
