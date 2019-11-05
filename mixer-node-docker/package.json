@@ -17,7 +17,7 @@
     "joi": "^13.4.0",
     "keccak": "^1.4.0",
     "method-override": "^2.3.10",
-    "mongoose": "^5.1.5",
+    "mongoose": "^5.7.5",
     "morgan": "^1.9.0",
     "secp256k1": "^3.5.0",
     "web3": "^0.20.6"
