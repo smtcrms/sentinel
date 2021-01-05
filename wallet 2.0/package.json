@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "async": "^2.6.0",
-    "axios": "^0.18.0",
+    "axios": "^0.21.1",
     "child_process": "^1.0.2",
     "compose": "^0.1.2",
     "countrynames": "^0.1.1",
