@@ -13,7 +13,7 @@
     "url": "https://github.com/sentinel-official/sentinel.git"
   },
   "dependencies": {
-    "async": "^2.6.0",
+    "async": "^3.2.2",
     "axios": "^0.18.0",
     "child_process": "^1.0.2",
     "compose": "^0.1.2",
