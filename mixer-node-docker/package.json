@@ -12,7 +12,7 @@
   "dependencies": {
     "compression": "^1.7.2",
     "cors": "^2.8.4",
-    "express": "^4.16.3",
+    "express": "^4.17.3",
     "glob": "^7.1.2",
     "joi": "^13.4.0",
     "keccak": "^1.4.0",
